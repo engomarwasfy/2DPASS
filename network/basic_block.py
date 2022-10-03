@@ -42,7 +42,7 @@ class ResNetFCN(nn.Module):
         if backbone == "resnet34":
             net = resnet34(pretrained)
         else:
-            raise NotImplementedError("invalid backbone: {}".format(backbone))
+            raise NotImplementedError(f"invalid backbone: {backbone}")
         self.hiden_size = config['model_params']['hiden_size']
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=3, bias=False)
         self.conv1.weight.data = net.conv1.weight.data
@@ -86,7 +86,7 @@ class ResNetFCN(nn.Module):
         x = data_dict['img']
         h, w = x.shape[2], x.shape[3]
         if h % 16 != 0 or w % 16 != 0:
-            assert False, "invalid input size: {}".format(x.shape)
+            assert False, f"invalid input size: {x.shape}"
 
         # Encoder
         conv1_out = self.relu(self.bn1(self.conv1(x)))

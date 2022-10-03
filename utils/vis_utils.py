@@ -99,8 +99,11 @@ SEMANTIC_KITTI_ID_TO_BGR = {  # bgr
   258: [180, 30, 80],
   259: [255, 0, 0],
 }
-SEMANTIC_KITTI_COLOR_PALETTE = [SEMANTIC_KITTI_ID_TO_BGR[id] if id in SEMANTIC_KITTI_ID_TO_BGR.keys() else [0, 0, 0]
-                                for id in range(list(SEMANTIC_KITTI_ID_TO_BGR.keys())[-1] + 1)]
+SEMANTIC_KITTI_COLOR_PALETTE = [
+    SEMANTIC_KITTI_ID_TO_BGR.get(id, [0, 0, 0])
+    for id in range(list(SEMANTIC_KITTI_ID_TO_BGR.keys())[-1] + 1)
+]
+
 
 
 # classes after merging (as used in xMUDA)
@@ -120,7 +123,7 @@ SEMANTIC_KITTI_COLOR_PALETTE_SHORT_BGR = [
 SEMANTIC_KITTI_COLOR_PALETTE_SHORT = [(c[2], c[1], c[0]) for c in SEMANTIC_KITTI_COLOR_PALETTE_SHORT_BGR]
 
 def write_obj(points, file, rgb=False):
-    fout = open('%s.obj' % file, 'w')
+    fout = open(f'{file}.obj', 'w')
     for i in range(points.shape[0]):
         if not rgb:
             fout.write('v %f %f %f %d %d %d\n' % (
@@ -166,9 +169,11 @@ def normalize_depth(depth, d_min, d_max):
 def draw_points_image_depth(img, img_indices, depth, show=True, point_size=0.5):
     # depth = normalize_depth(depth, d_min=3., d_max=50.)
     depth = normalize_depth(depth, d_min=depth.min(), d_max=depth.max())
-    colors = []
-    for depth_val in depth:
-        colors.append(interpolate_or_clip(colormap=turbo_colormap_data, x=depth_val))
+    colors = [
+        interpolate_or_clip(colormap=turbo_colormap_data, x=depth_val)
+        for depth_val in depth
+    ]
+
     # ax5.imshow(np.full_like(img, 255))
     plt.imshow(img)
     plt.scatter(img_indices[:, 1], img_indices[:, 0], c=colors, alpha=0.5, s=point_size)
