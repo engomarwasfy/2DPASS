@@ -81,15 +81,14 @@ class SemanticKITTI(data.Dataset):
         """
         calib_all = {}
         with open(calib_path, 'r') as f:
-            for line in f.readlines():
+            for line in f:
                 if line == '\n':
                     break
                 key, value = line.split(':', 1)
                 calib_all[key] = np.array([float(x) for x in value.split()])
 
         # reshape matrices
-        calib_out = {}
-        calib_out['P2'] = calib_all['P2'].reshape(3, 4)  # 3x4 projection matrix for left camera
+        calib_out = {'P2': calib_all['P2'].reshape(3, 4)}
         calib_out['Tr'] = np.identity(4)  # 4x4 matrix
         calib_out['Tr'][:3, :4] = calib_all['Tr'].reshape(3, 4)
 
@@ -118,9 +117,7 @@ class SemanticKITTI(data.Dataset):
         image = Image.open(image_file)
         proj_matrix = self.proj_matrix[int(self.im_idx[index][-22:-20])]
 
-        data_dict = {}
-        data_dict['xyz'] = points
-        data_dict['labels'] = annotated_data.astype(np.uint8)
+        data_dict = {'xyz': points, 'labels': annotated_data.astype(np.uint8)}
         data_dict['instance_label'] = instance_label
         data_dict['signal'] = raw_data[:, 3:4]
         data_dict['origin_len'] = origin_len
@@ -136,17 +133,16 @@ class nuScenes(data.Dataset):
         if config.debug:
             version = 'v1.0-mini'
             scenes = splits.mini_train
-        else:
-            if imageset != 'test':
-                version = 'v1.0-trainval'
-                if imageset == 'train':
-                    scenes = splits.train
-                else:
-                    scenes = splits.val
-            else:
-                version = 'v1.0-test'
-                scenes = splits.test
+        elif imageset == 'test':
+            version = 'v1.0-test'
+            scenes = splits.test
 
+        elif imageset == 'train':
+            version = 'v1.0-trainval'
+            scenes = splits.train
+        else:
+            version = 'v1.0-trainval'
+            scenes = splits.val
         self.split = imageset
         with open(config['dataset_params']['label_mapping'], 'r') as stream:
             nuscenesyaml = yaml.safe_load(stream)
@@ -164,7 +160,11 @@ class nuScenes(data.Dataset):
         self.get_available_scenes()
         available_scene_names = [s['name'] for s in self.available_scenes]
         scenes = list(filter(lambda x: x in available_scene_names, scenes))
-        scenes = set([self.available_scenes[available_scene_names.index(s)]['token'] for s in scenes])
+        scenes = {
+            self.available_scenes[available_scene_names.index(s)]['token']
+            for s in scenes
+        }
+
         self.get_path_infos_cam_lidar(scenes)
 
         print('Total %d scenes in the %s split' % (len(self.token_list), imageset))
@@ -210,37 +210,31 @@ class nuScenes(data.Dataset):
     def get_available_scenes(self):
         # only for check if all the files are available
         self.available_scenes = []
+        has_more_frames = True
         for scene in self.nusc.scene:
             scene_token = scene['token']
             scene_rec = self.nusc.get('scene', scene_token)
             sample_rec = self.nusc.get('sample', scene_rec['first_sample_token'])
             sd_rec = self.nusc.get('sample_data', sample_rec['data']['LIDAR_TOP'])
-            has_more_frames = True
             scene_not_exist = False
             while has_more_frames:
                 lidar_path, _, _ = self.nusc.get_sample_data(sd_rec['token'])
                 if not Path(lidar_path).exists():
                     scene_not_exist = True
-                    break
-                else:
-                    break
-
-            if scene_not_exist:
-                continue
-            self.available_scenes.append(scene)
+                break
+            if not scene_not_exist:
+                self.available_scenes.append(scene)
 
     def get_path_infos_cam_lidar(self, scenes):
         self.token_list = []
 
         for sample in self.nusc.sample:
             scene_token = sample['scene_token']
-            lidar_token = sample['data']['LIDAR_TOP']  # 360 lidar
-
             if scene_token in scenes:
+                lidar_token = sample['data']['LIDAR_TOP']  # 360 lidar
+
                 for _ in range(self.num_vote):
-                    cam_token = []
-                    for i in self.img_view:
-                        cam_token.append(sample['data'][i])
+                    cam_token = [sample['data'][i] for i in self.img_view]
                     self.token_list.append(
                         {'lidar_token': lidar_token,
                          'cam_token': cam_token}
@@ -276,11 +270,13 @@ class nuScenes(data.Dataset):
             "cam_intrinsic": cam_intrinsic,
         }
 
-        data_dict = {}
-        data_dict['xyz'] = pointcloud[:, :3]
-        data_dict['img'] = image
-        data_dict['calib_infos'] = calib_infos
-        data_dict['labels'] = sem_label.astype(np.uint8)
+        data_dict = {
+            'xyz': pointcloud[:, :3],
+            'img': image,
+            'calib_infos': calib_infos,
+            'labels': sem_label.astype(np.uint8),
+        }
+
         data_dict['signal'] = pointcloud[:, 3:4]
         data_dict['origin_len'] = len(pointcloud)
 
@@ -290,8 +286,7 @@ class nuScenes(data.Dataset):
 def get_SemKITTI_label_name(label_mapping):
     with open(label_mapping, 'r') as stream:
         semkittiyaml = yaml.safe_load(stream)
-    SemKITTI_label_name = dict()
-    for i in sorted(list(semkittiyaml['learning_map'].keys()))[::-1]:
-        SemKITTI_label_name[semkittiyaml['learning_map'][i]] = semkittiyaml['labels'][i]
-
-    return SemKITTI_label_name
+    return {
+        semkittiyaml['learning_map'][i]: semkittiyaml['labels'][i]
+        for i in sorted(list(semkittiyaml['learning_map'].keys()))[::-1]
+    }

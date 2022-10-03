@@ -170,62 +170,57 @@ class LightningBaseModel(pl.LightningModule):
                 prediction.cpu().detach().numpy(),
                 raw_labels.cpu().detach().numpy(),
              )
-        else:
-            if self.args['dataset_params']['pc_dataset_type'] != 'nuScenes':
-                components = path.split('/')
-                sequence = components[-3]
-                points_name = components[-1]
-                label_name = points_name.replace('bin', 'label')
-                full_save_dir = os.path.join(self.submit_dir, 'sequences', sequence, 'predictions')
-                os.makedirs(full_save_dir, exist_ok=True)
-                full_label_name = os.path.join(full_save_dir, label_name)
-
-                if os.path.exists(full_label_name):
-                    print('%s already exsist...' % (label_name))
-                    pass
-
-                valid_labels = np.vectorize(self.mapfile['learning_map_inv'].__getitem__)
-                original_label = valid_labels(vote_logits.argmax(1).cpu().numpy().astype(int))
-                final_preds = original_label.astype(np.uint32)
-                final_preds.tofile(full_label_name)
-
-            else:
-                meta_dict = {
-                    "meta": {
-                        "use_camera": False,
-                        "use_lidar": True,
-                        "use_map": False,
-                        "use_radar": False,
-                        "use_external": False,
-                    }
+        elif self.args['dataset_params']['pc_dataset_type'] == 'nuScenes':
+            meta_dict = {
+                "meta": {
+                    "use_camera": False,
+                    "use_lidar": True,
+                    "use_map": False,
+                    "use_radar": False,
+                    "use_external": False,
                 }
-                os.makedirs(os.path.join(self.submit_dir, 'test'), exist_ok=True)
-                with open(os.path.join(self.submit_dir, 'test', 'submission.json'), 'w', encoding='utf-8') as f:
-                    json.dump(meta_dict, f)
-                original_label = prediction.cpu().numpy().astype(np.uint8)
+            }
+            os.makedirs(os.path.join(self.submit_dir, 'test'), exist_ok=True)
+            with open(os.path.join(self.submit_dir, 'test', 'submission.json'), 'w', encoding='utf-8') as f:
+                json.dump(meta_dict, f)
+            original_label = prediction.cpu().numpy().astype(np.uint8)
 
-                assert all((original_label > 0) & (original_label < 17)), \
+            assert all((original_label > 0) & (original_label < 17)), \
                     "Error: Array for predictions must be between 1 and 16 (inclusive)."
 
-                full_save_dir = os.path.join(self.submit_dir, 'lidarseg/test')
-                full_label_name = os.path.join(full_save_dir, path + '_lidarseg.bin')
-                os.makedirs(full_save_dir, exist_ok=True)
+            full_save_dir = os.path.join(self.submit_dir, 'lidarseg/test')
+            full_label_name = os.path.join(full_save_dir, f'{path}_lidarseg.bin')
+            os.makedirs(full_save_dir, exist_ok=True)
 
-                if os.path.exists(full_label_name):
-                    print('%s already exsist...' % (full_label_name))
-                else:
-                    original_label.tofile(full_label_name)
+            if os.path.exists(full_label_name):
+                print(f'{full_label_name} already exsist...')
+            else:
+                original_label.tofile(full_label_name)
+
+        else:
+            components = path.split('/')
+            sequence = components[-3]
+            points_name = components[-1]
+            label_name = points_name.replace('bin', 'label')
+            full_save_dir = os.path.join(self.submit_dir, 'sequences', sequence, 'predictions')
+            os.makedirs(full_save_dir, exist_ok=True)
+            full_label_name = os.path.join(full_save_dir, label_name)
+
+            if os.path.exists(full_label_name):
+                print(f'{label_name} already exsist...')
+            valid_labels = np.vectorize(self.mapfile['learning_map_inv'].__getitem__)
+            original_label = valid_labels(vote_logits.argmax(1).cpu().numpy().astype(int))
+            final_preds = original_label.astype(np.uint32)
+            final_preds.tofile(full_label_name)
 
         return data_dict['loss']
 
     def validation_epoch_end(self, outputs):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
-        str_print = ''
         self.log('val/mIoU', mIoU, on_epoch=True)
         self.log('val/best_miou', best_miou, on_epoch=True)
-        str_print += 'Validation per class iou: '
-
+        str_print = '' + 'Validation per class iou: '
         for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
             str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
 
@@ -233,19 +228,18 @@ class LightningBaseModel(pl.LightningModule):
         self.print(str_print)
 
     def test_epoch_end(self, outputs):
-        if not self.args['submit_to_server']:
-            iou, best_miou = self.val_iou.compute()
-            mIoU = np.nanmean(iou)
-            str_print = ''
-            self.log('val/mIoU', mIoU, on_epoch=True)
-            self.log('val/best_miou', best_miou, on_epoch=True)
-            str_print += 'Validation per class iou: '
+        if self.args['submit_to_server']:
+            return
+        iou, best_miou = self.val_iou.compute()
+        mIoU = np.nanmean(iou)
+        self.log('val/mIoU', mIoU, on_epoch=True)
+        self.log('val/best_miou', best_miou, on_epoch=True)
+        str_print = '' + 'Validation per class iou: '
+        for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
+            str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
 
-            for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
-                str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
-
-            str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
-            self.print(str_print)
+        str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
+        self.print(str_print)
 
     def on_after_backward(self) -> None:
         """
@@ -259,5 +253,5 @@ class LightningBaseModel(pl.LightningModule):
                 if not valid_gradients:
                     break
         if not valid_gradients:
-            print(f'detected inf or nan values in gradients. not updating model parameters')
+            print('detected inf or nan values in gradients. not updating model parameters')
             self.zero_grad()

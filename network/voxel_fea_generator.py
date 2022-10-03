@@ -27,7 +27,7 @@ class voxelization(nn.Module):
     def forward(self, data_dict):
         pc = data_dict['points'][:, :3]
 
-        for idx, scale in enumerate(self.scale_list):
+        for scale in self.scale_list:
             xidx = self.sparse_quantize(pc[:, 0], self.coors_range_xyz[0], np.ceil(self.spatial_shape[0] / scale))
             yidx = self.sparse_quantize(pc[:, 1], self.coors_range_xyz[1], np.ceil(self.spatial_shape[1] / scale))
             zidx = self.sparse_quantize(pc[:, 2], self.coors_range_xyz[2], np.ceil(self.spatial_shape[2] / scale))
@@ -35,11 +35,12 @@ class voxelization(nn.Module):
             bxyz_indx = torch.stack([data_dict['batch_idx'], xidx, yidx, zidx], dim=-1).long()
             unq, unq_inv, unq_cnt = torch.unique(bxyz_indx, return_inverse=True, return_counts=True, dim=0)
             unq = torch.cat([unq[:, 0:1], unq[:, [3, 2, 1]]], dim=1)
-            data_dict['scale_{}'.format(scale)] = {
+            data_dict[f'scale_{scale}'] = {
                 'full_coors': bxyz_indx,
                 'coors_inv': unq_inv,
-                'coors': unq.type(torch.int32)
+                'coors': unq.type(torch.int32),
             }
+
         return data_dict
 
 
@@ -65,8 +66,7 @@ class voxel_3d_generator(nn.Module):
         voxel_centers = grid_ind * intervals + coors_range_xyz[:, 0].to(point.device)
         center_to_point = point[:, :3] - voxel_centers
 
-        pc_feature = torch.cat((point, nor_pc, center_to_point), dim=1)
-        return pc_feature
+        return torch.cat((point, nor_pc, center_to_point), dim=1)
 
     def forward(self, data_dict):
         pt_fea = self.prepare_input(

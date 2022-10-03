@@ -26,7 +26,7 @@ def lovasz_grad(gt_sorted):
     union = gts + (1 - gt_sorted).float().cumsum(0)
     jaccard = 1. - intersection / union
     if p > 1:  # cover 1-pixel case
-        jaccard[1:p] = jaccard[1:p] - jaccard[0:-1]
+        jaccard[1:p] = jaccard[1:p] - jaccard[:-1]
     return jaccard
 
 
@@ -41,10 +41,7 @@ def iou_binary(preds, labels, EMPTY=1., ignore=None, per_image=True):
     for pred, label in zip(preds, labels):
         intersection = ((label == 1) & (pred == 1)).sum()
         union = ((label == 1) | ((pred == 1) & (label != ignore))).sum()
-        if not union:
-            iou = EMPTY
-        else:
-            iou = float(intersection) / float(union)
+        iou = float(intersection) / float(union) if union else EMPTY
         ious.append(iou)
     iou = mean(ious)  # mean accross images if per_image
     return 100 * iou
@@ -62,11 +59,12 @@ def iou(preds, labels, C, EMPTY=1., ignore=None, per_image=False):
         for i in range(C):
             if i != ignore:  # The ignored label is sometimes among predicted classes (ENet - CityScapes)
                 intersection = ((label == i) & (pred == i)).sum()
-                union = ((label == i) | ((pred == i) & (label != ignore))).sum()
-                if not union:
-                    iou.append(EMPTY)
-                else:
+                if union := (
+                    (label == i) | ((pred == i) & (label != ignore))
+                ).sum():
                     iou.append(float(intersection) / float(union))
+                else:
+                    iou.append(EMPTY)
         ious.append(iou)
     ious = [mean(iou) for iou in zip(*ious)]  # mean accross images if per_image
     return 100 * np.array(ious)
@@ -83,12 +81,18 @@ def lovasz_hinge(logits, labels, per_image=True, ignore=None):
       per_image: compute the loss per image instead of per batch
       ignore: void class id
     """
-    if per_image:
-        loss = mean(lovasz_hinge_flat(*flatten_binary_scores(log.unsqueeze(0), lab.unsqueeze(0), ignore))
-                    for log, lab in zip(logits, labels))
-    else:
-        loss = lovasz_hinge_flat(*flatten_binary_scores(logits, labels, ignore))
-    return loss
+    return (
+        mean(
+            lovasz_hinge_flat(
+                *flatten_binary_scores(
+                    log.unsqueeze(0), lab.unsqueeze(0), ignore
+                )
+            )
+            for log, lab in zip(logits, labels)
+        )
+        if per_image
+        else lovasz_hinge_flat(*flatten_binary_scores(logits, labels, ignore))
+    )
 
 
 def lovasz_hinge_flat(logits, labels):
@@ -107,8 +111,7 @@ def lovasz_hinge_flat(logits, labels):
     perm = perm.data
     gt_sorted = labels[perm]
     grad = lovasz_grad(gt_sorted)
-    loss = torch.dot(F.relu(errors_sorted), Variable(grad))
-    return loss
+    return torch.dot(F.relu(errors_sorted), Variable(grad))
 
 
 def flatten_binary_scores(scores, labels, ignore=None):
@@ -144,8 +147,7 @@ def binary_xloss(logits, labels, ignore=None):
       ignore: void class id
     """
     logits, labels = flatten_binary_scores(logits, labels, ignore)
-    loss = StableBCELoss()(logits, Variable(labels.float()))
-    return loss
+    return StableBCELoss()(logits, Variable(labels.float()))
 
 
 # --------------------------- MULTICLASS LOSSES ---------------------------
@@ -161,12 +163,19 @@ def lovasz_softmax(probas, labels, classes='present', per_image=False, ignore=No
       per_image: compute the loss per image instead of per batch
       ignore: void class labels
     """
-    if per_image:
-        loss = mean(lovasz_softmax_flat(*flatten_probas(prob.unsqueeze(0), lab.unsqueeze(0), ignore), classes=classes)
-                    for prob, lab in zip(probas, labels))
-    else:
-        loss = lovasz_softmax_flat(*flatten_probas(probas, labels, ignore), classes=classes)
-    return loss
+    return (
+        mean(
+            lovasz_softmax_flat(
+                *flatten_probas(prob.unsqueeze(0), lab.unsqueeze(0), ignore),
+                classes=classes
+            )
+            for prob, lab in zip(probas, labels)
+        )
+        if per_image
+        else lovasz_softmax_flat(
+            *flatten_probas(probas, labels, ignore), classes=classes
+        )
+    )
 
 
 def lovasz_softmax_flat(probas, labels, classes='present'):
@@ -291,8 +300,7 @@ def hinge_jaccard_loss(probas, labels, ignore=None, classes='present', hinge=0.1
 
             losses.append(1 - TP / (TP + FP + FN))
 
-    if len(losses) == 0: return 0
-    return mean(losses)
+    return mean(losses) if losses else 0
 
 
 # --------------------------- HELPER FUNCTIONS ---------------------------
@@ -316,6 +324,4 @@ def mean(l, ignore_nan=False, empty=0):
         return empty
     for n, v in enumerate(l, 2):
         acc += v
-    if n == 1:
-        return acc
-    return acc / n
+    return acc if n == 1 else acc / n
