@@ -142,7 +142,7 @@ if __name__ == '__main__':
     log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
     os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
-    profiler = SimpleProfiler(output_filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
+    profiler = SimpleProfiler(filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
     np.set_printoptions(precision=4, suppress=True)
 
     # save the backup files
@@ -192,7 +192,7 @@ if __name__ == '__main__':
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='ddp',
+                             accelerator='gpu',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
                              callbacks=[checkpoint_callback,
