@@ -225,12 +225,14 @@ class LightningBaseModel(pl.LightningModule):
         self.log('val/mIoU', mIoU, on_epoch=True)
         self.log('val/best_miou', best_miou, on_epoch=True)
         str_print += 'Validation per class iou: '
+        try:
+            for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
+                str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
 
-        for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
-            str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
-
-        str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
-        self.print(str_print)
+            str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
+            self.print(str_print)
+        except:
+            print('Error in printing iou')
 
     def test_epoch_end(self, outputs):
         if not self.args['submit_to_server']:

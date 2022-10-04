@@ -70,9 +70,9 @@ dataset_params:
     - 1168181
   train_data_loader:
     data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
-    batch_size: 8
+    batch_size: 4
     shuffle: True
-    num_workers: 2
+    num_workers: 16
     rotate_aug: True
     flip_aug: True
     scale_aug: True
@@ -81,9 +81,9 @@ dataset_params:
   val_data_loader:
     data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
-    num_workers: 8
+    num_workers: 16
     # normal test
-    batch_size: 2
+    batch_size: 4
     rotate_aug: False
     flip_aug: False
     scale_aug: False
@@ -101,3 +101,5 @@ train_params:
   weight_decay: 1.0e-4
   lambda_seg2d: 1
   lambda_xm: 0.05
+  decay_rate: 0.1
+  decay_step: 20

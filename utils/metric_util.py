@@ -11,7 +11,12 @@ def fast_hist(pred, label, n):
 
 
 def per_class_iu(hist):
-    return np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
+    if hist.shape[0] == 0:
+        return 0
+    else:
+        hist2D=hist.sum(axis=0)
+        print(hist2D.shape)
+        return np.diag(hist2D) / (hist2D.sum(1) + hist2D.sum(0) - np.diag(hist2D))
 
 
 def fast_hist_crop(output, target, unique_label):
@@ -34,7 +39,7 @@ class IoU(Metric):
         self.hist_list.append(fast_hist_crop(predict_labels, val_pt_labs, self.unique_label))
 
     def compute(self):
-        iou = per_class_iu(sum(self.hist_list))
+        iou = per_class_iu(np.array(self.hist_list))
         if np.nanmean(iou) > self.best_miou:
             self.best_miou = np.nanmean(iou)
         self.hist_list = []
