@@ -138,7 +138,7 @@ class criterion(nn.Module):
 
         return data_dict
 
-class RSU(pl.LightningModule):
+class RSU(nn.Module):
     def __init__(self, config,levelIndex=1,decoderLevelIndex=7,decoder= False,):
         super(RSU,self).__init__()
         self.input_dims = config[f'model_params{levelIndex}']['input_dims']
@@ -156,6 +156,7 @@ class RSU(pl.LightningModule):
         self.levelIndex = levelIndex
         self.decoderLevelIndex = decoderLevelIndex
         self.decoder = decoder
+        self.config = config
         # voxelization
         self.voxelizer = voxelization(
             coors_range_xyz=self.coors_range_xyz,
@@ -211,7 +212,7 @@ class RSU(pl.LightningModule):
         else:
             data_dict[f'logits{self.levelIndex}'] = self.classifier(output)
             data_dict[f'loss{self.levelIndex}'] = 0.
-            data_dict = criterion(data_dict,self.levelIndex)
+            data_dict = self.criterion(data_dict,self.levelIndex)
         return data_dict
 
 ### RSU-7 ###
@@ -258,7 +259,7 @@ class RSU1(RSU):#UNet03DRES(nn.Module):
     def forward(self,x):
         return super(RSU1, self).forward(x)
 ##### U^2-Net ####
-class U2NET():
+class U2NET(nn.Module):
 
     def __init__(self,config):
         super(U2NET,self).__init__()

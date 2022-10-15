@@ -40,8 +40,6 @@ class LightningBaseModel(pl.LightningModule):
             optimizer = torch.optim.Adam(self.parameters(),
                                          lr=self.args['train_params']["learning_rate"])
         elif self.args['train_params']['optimizer'] == 'SGD':
-            print(self)
-            print("hello")
             optimizer = torch.optim.SGD(self.parameters(),
                                         lr=self.args['train_params']["learning_rate"],
                                         momentum=self.args['train_params']["momentum"],

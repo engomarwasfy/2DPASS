@@ -167,7 +167,6 @@ if __name__ == '__main__':
     train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
     model_file = importlib.import_module('network.' + configs['model_params1']['model_architecture'])
     my_model = model_file.get_model(configs)
-
     pl.seed_everything(configs.seed)
     checkpoint_callback = ModelCheckpoint(
         monitor=configs.monitor,
