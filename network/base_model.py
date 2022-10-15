@@ -99,13 +99,14 @@ class LightningBaseModel(pl.LightningModule):
 
     def training_step(self, data_dict, batch_idx):
         data_dict = self.forward(data_dict)
-        self.train_acc(data_dict['logits'].argmax(1)[data_dict['labels'] != self.ignore_label],
-                       data_dict['labels'][data_dict['labels'] != self.ignore_label])
+        #TODO average on all layers 0,1,2,3,4,5,6
+        self.train_acc(data_dict[6]['logits1'].argmax(1)[data_dict[6]['labels'] != self.ignore_label],
+                       data_dict[6]['labels'][data_dict[6]['labels'] != self.ignore_label])
         self.log('train/acc', self.train_acc, on_epoch=True)
-        self.log('train/loss_main_ce', data_dict['loss_main_ce'])
-        self.log('train/loss_main_lovasz', data_dict['loss_main_lovasz'])
+        self.log('train/loss_main_ce', data_dict[6]['loss_main_ce1'])
+        self.log('train/loss_main_lovasz', data_dict[6]['loss_main_lovasz1'])
 
-        return data_dict['loss']
+        return data_dict[6]['loss1']
 
 
     def validation_step(self, data_dict, batch_idx):
@@ -121,8 +122,10 @@ class LightningBaseModel(pl.LightningModule):
                 vote_logits = vote_logits[:origin_len]
                 raw_labels = raw_labels[:origin_len]
         else:
-            vote_logits = data_dict['logits'].cpu()
-            raw_labels = data_dict['labels'].squeeze(0).cpu()
+            #TODO Use all networks logits
+            vote_logits = data_dict[6]['logits1'].cpu()
+            #TODO labels1,labels2,labels3,labels4,labels5,labels6 should be defined
+            raw_labels = data_dict[6]['labels'].squeeze(0).cpu()
 
         prediction = vote_logits.argmax(1)
 
@@ -139,7 +142,7 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels.cpu().detach().numpy(),
          )
 
-        return data_dict['loss']
+        return data_dict[6]['loss1']
 
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']

@@ -208,11 +208,11 @@ class RSU(nn.Module):
         if(self.decoder):
             data_dict[f'logits{self.decoderLevelIndex}'] = self.classifier(output)
             data_dict[f'loss{self.decoderLevelIndex}'] = 0.
-            data_dict = self.criterion(data_dict, self.decoderLevelIndex)
+            data_dict = self.criterion(data_dict)
         else:
             data_dict[f'logits{self.levelIndex}'] = self.classifier(output)
             data_dict[f'loss{self.levelIndex}'] = 0.
-            data_dict = self.criterion(data_dict,self.levelIndex)
+            data_dict = self.criterion(data_dict)
         return data_dict
 
 ### RSU-7 ###
@@ -288,29 +288,29 @@ class U2NET(nn.Module):
 
         #stage 1
         hx1 = self.stage1(hx)
-        hx = self.pool12(hx1)
+        #hx = self.pool12(hx1)
 
         #stage 2
-        hx2 = self.stage2(hx)
-        hx = self.pool23(hx2)
+        hx2 = self.stage2(hx1)
+        #hx = self.pool23(hx2)
 
         #stage 3
-        hx3 = self.stage3(hx)
-        hx = self.pool34(hx3)
+        hx3 = self.stage3(hx2)
+        #hx = self.pool34(hx3)
 
         #stage 4
-        hx4 = self.stage4(hx)
-        hx = self.pool43(hx4)
+        hx4 = self.stage4(hx3)
+        #hx = self.pool43(hx4)
         #-------------------- decoder --------------------
 
         #stage 5
-        hx3d = self.stage5(hx)
-        hx = self.pool32(hx3d)
+        hx3d = self.stage3d(hx4)
+        #hx = self.pool32(hx3d)
 
         #stage 6
-        hx2d = self.stage6(hx)
-        hx = self.pool21(hx2d)
+        hx2d = self.stage2d(hx3d)
+        #hx = self.pool21(hx2d)
         # stage 7
-        hx1d = self.stage7(hx)
+        hx1d = self.stage1d(hx2d)
 
         return hx1,hx2,hx3,hx4,hx3d,hx2d,hx1d
