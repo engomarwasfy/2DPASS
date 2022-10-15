@@ -22,8 +22,16 @@ If you find our work useful in your research, please consider citing:
       year={2022},
       booktitle={ECCV}
 }
+
+@InProceedings{yan2022let,
+      title={Let Images Give You More: Point Cloud Cross-Modal Training for Shape Analysis}, 
+      author={Xu Yan and Heshen Zhan and Chaoda Zheng and Jiantao Gao and Ruimao Zhang and Shuguang Cui and Zhen Li},
+      year={2022},
+      booktitle={NeurIPS}
+}
 ```
 ## News
+* **2022-10-11**  Our new work for cross-modal knowledge distillation is accepted at NeurIPS 2022:smiley: ([here](https://arxiv.org/pdf/2210.04208.pdf)).
 * **2022-09-20** We release codes for SemanticKITTI single-scan and NuScenes :rocket:!
 * **2022-07-03** 2DPASS is accepted at **ECCV 2022** :fire:!
 * **2022-03-08** We achieve **1st** place in both single and multi-scans of [SemanticKITTI](http://semantic-kitti.org/index.html) and **3rd** place on [NuScenes-lidarseg](https://www.nuscenes.org/) :fire:! 
@@ -43,6 +51,7 @@ If you find our work useful in your research, please consider citing:
 - pytorch >= 1.8 
 - yaml
 - easydict
+- pyquaternion
 - [lightning](https://github.com/Lightning-AI/lightning) (tested with pytorch_lightning==1.3.8 and torchmetrics==0.5)
 - [torch-scatter](https://github.com/rusty1s/pytorch_scatter) (pip install torch-scatter -f https://data.pyg.org/whl/torch-1.9.0+${CUDA}.html)
 - [nuScenes-devkit](https://github.com/nutonomy/nuscenes-devkit) (optional for nuScenes)
