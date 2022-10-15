@@ -18,6 +18,86 @@ model_params:
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
+model_params1:
+  model_architecture: "arch_2dpass"
+  input_dims: 4
+  spatial_shape:
+    - 1000
+    - 1000
+    - 60
+  scale_list:
+    - 2
+    - 4
+    - 8
+    - 16
+  hiden_size: 64
+  num_classes: 20
+  backbone_2d: resnet34
+  pretrained2d: False
+model_params2:
+  model_architecture: "arch_2dpass"
+  input_dims: 4
+  spatial_shape:
+    - 500
+    - 500
+    - 30
+  scale_list:
+    - 2
+    - 4
+    - 8
+    - 16
+  hiden_size: 64
+  num_classes: 20
+  backbone_2d: resnet34
+  pretrained2d: False
+model_params3:
+  model_architecture: "arch_2dpass"
+  input_dims: 4
+  spatial_shape:
+    - 250
+    - 250
+    - 15
+  scale_list:
+    - 2
+    - 4
+    - 8
+    - 16
+  hiden_size: 64
+  num_classes: 20
+  backbone_2d: resnet34
+  pretrained2d: False
+model_params4:
+  model_architecture: "arch_2dpass"
+  input_dims: 4
+  spatial_shape:
+    - 125
+    - 125
+    - 8
+  scale_list:
+    - 2
+    - 4
+    - 8
+    - 16
+  hiden_size: 64
+  num_classes: 20
+  backbone_2d: resnet34
+  pretrained2d: False
+model_params5:
+  model_architecture: "arch_2dpass"
+  input_dims: 4
+  spatial_shape:
+    - 125
+    - 125
+    - 8
+  scale_list:
+    - 2
+    - 4
+    - 8
+    - 16
+  hiden_size: 64
+  num_classes: 20
+  backbone_2d: resnet34
+  pretrained2d: False
 ###################
 ## Dataset options
 dataset_params:
@@ -103,3 +183,4 @@ train_params:
   lambda_xm: 0.05
   decay_rate: 0.1
   decay_step: 20
+  lambda_lovasz: 0.1

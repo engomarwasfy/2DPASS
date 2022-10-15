@@ -16,7 +16,7 @@ from network.basic_block import Lovasz_loss
 from network.base_model import LightningBaseModel
 from network.basic_block import SparseBasicBlock
 from network.voxel_fea_generator import voxel_3d_generator, voxelization
-
+import pytorch_lightning as pl
 
 class point_encoder(nn.Module):
     def __init__(self, in_channels, out_channels, scale):
@@ -106,25 +106,56 @@ class SPVBlock(nn.Module):
         )
 
         return p_fea[coors_inv]
+class criterion(nn.Module):
+    def __init__(self, config,levelIndex):
+        super(criterion, self).__init__()
+        self.config = config
+        print(config)
+        self.lambda_lovasz = config['train_params'].get('lambda_lovasz', 0.1)
+        self.levelIndex = levelIndex
+        if 'seg_labelweights' in config['dataset_params']:
+            seg_num_per_class = config['dataset_params']['seg_labelweights']
+            seg_labelweights = seg_num_per_class / np.sum(seg_num_per_class)
+            seg_labelweights = torch.Tensor(np.power(np.amax(seg_labelweights) / seg_labelweights, 1 / 3.0))
+        else:
+            seg_labelweights = None
 
+        self.ce_loss = nn.CrossEntropyLoss(
+            weight=seg_labelweights,
+            ignore_index=config['dataset_params']['ignore_label']
+        )
+        self.lovasz_loss = Lovasz_loss(
+            ignore=config['dataset_params']['ignore_label']
+        )
 
-class get_model(LightningBaseModel):
-    def __init__(self, config):
-        super(get_model, self).__init__(config)
-        self.save_hyperparameters()
-        self.input_dims = config['model_params']['input_dims']
-        self.hiden_size = config['model_params']['hiden_size']
-        self.num_classes = config['model_params']['num_classes']
-        self.scale_list = config['model_params']['scale_list']
+    def forward(self, data_dict):
+        loss_main_ce = self.ce_loss(data_dict[f'logits{self.levelIndex}'], data_dict['labels'].long())
+        loss_main_lovasz = self.lovasz_loss(F.softmax(data_dict[f'logits{self.levelIndex}'], dim=1), data_dict['labels'].long())
+        loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz
+        data_dict[f'loss_main_ce{self.levelIndex}'] = loss_main_ce
+        data_dict[f'loss_main_lovasz{self.levelIndex}'] = loss_main_lovasz
+        data_dict[f'loss{self.levelIndex}'] += loss_main
+
+        return data_dict
+
+class RSU(pl.LightningModule):
+    def __init__(self, config,levelIndex=1,decoderLevelIndex=7,decoder= False,):
+        super(RSU,self).__init__()
+        self.input_dims = config[f'model_params{levelIndex}']['input_dims']
+        self.hiden_size = config[f'model_params{levelIndex}']['hiden_size']
+        self.num_classes = config[f'model_params{levelIndex}']['num_classes']
+        self.scale_list = config[f'model_params{levelIndex}']['scale_list']
         self.num_scales = len(self.scale_list)
-        min_volume_space = config['dataset_params']['min_volume_space']
-        max_volume_space = config['dataset_params']['max_volume_space']
+        min_volume_space = config[f'dataset_params']['min_volume_space']
+        max_volume_space = config[f'dataset_params']['max_volume_space']
         self.coors_range_xyz = [[min_volume_space[0], max_volume_space[0]],
                                 [min_volume_space[1], max_volume_space[1]],
                                 [min_volume_space[2], max_volume_space[2]]]
-        self.spatial_shape = np.array(config['model_params']['spatial_shape'])
+        self.spatial_shape = np.array(config[f'model_params{levelIndex}']['spatial_shape'])
         self.strides = [int(scale / self.scale_list[0]) for scale in self.scale_list]
-
+        self.levelIndex = levelIndex
+        self.decoderLevelIndex = decoderLevelIndex
+        self.decoder = decoder
         # voxelization
         self.voxelizer = voxelization(
             coors_range_xyz=self.coors_range_xyz,
@@ -160,7 +191,7 @@ class get_model(LightningBaseModel):
         )
 
         # loss
-        self.criterion = criterion(config)
+        self.criterion = criterion(config,levelIndex)
 
     def forward(self, data_dict):
         with torch.no_grad():
@@ -173,40 +204,112 @@ class get_model(LightningBaseModel):
             enc_feats.append(self.spv_enc[i](data_dict))
 
         output = torch.cat(enc_feats, dim=1)
-        data_dict['logits'] = self.classifier(output)
-
-        data_dict['loss'] = 0.
-        data_dict = self.criterion(data_dict)
-
-        return data_dict
-
-
-class criterion(nn.Module):
-    def __init__(self, config):
-        super(criterion, self).__init__()
-        self.config = config
-        self.lambda_lovasz = self.config['train_params'].get('lambda_lovasz', 0.1)
-        if 'seg_labelweights' in config['dataset_params']:
-            seg_num_per_class = config['dataset_params']['seg_labelweights']
-            seg_labelweights = seg_num_per_class / np.sum(seg_num_per_class)
-            seg_labelweights = torch.Tensor(np.power(np.amax(seg_labelweights) / seg_labelweights, 1 / 3.0))
+        if(self.decoder):
+            data_dict[f'logits{self.decoderLevelIndex}'] = self.classifier(output)
+            data_dict[f'loss{self.decoderLevelIndex}'] = 0.
+            data_dict = self.criterion(data_dict, self.decoderLevelIndex)
         else:
-            seg_labelweights = None
-
-        self.ce_loss = nn.CrossEntropyLoss(
-            weight=seg_labelweights,
-            ignore_index=config['dataset_params']['ignore_label']
-        )
-        self.lovasz_loss = Lovasz_loss(
-            ignore=config['dataset_params']['ignore_label']
-        )
-
-    def forward(self, data_dict):
-        loss_main_ce = self.ce_loss(data_dict['logits'], data_dict['labels'].long())
-        loss_main_lovasz = self.lovasz_loss(F.softmax(data_dict['logits'], dim=1), data_dict['labels'].long())
-        loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz
-        data_dict['loss_main_ce'] = loss_main_ce
-        data_dict['loss_main_lovasz'] = loss_main_lovasz
-        data_dict['loss'] += loss_main
-
+            data_dict[f'logits{self.levelIndex}'] = self.classifier(output)
+            data_dict[f'loss{self.levelIndex}'] = 0.
+            data_dict = criterion(data_dict,self.levelIndex)
         return data_dict
+
+### RSU-7 ###
+class RSU7(RSU) :#UNet07DRES(nn.Module):
+    def __init__(self,config):
+        super(RSU7, self).__init__(config,levelIndex=1,decoderLevelIndex=7,decoder= True)
+    def forward(self,x):
+        return super(RSU7, self).forward(x)
+
+### RSU-6 ###
+class RSU6(RSU):#UNet06DRES(nn.Module):
+    def __init__(self,config):
+        super(RSU6, self).__init__(config,levelIndex=2, decoderLevelIndex=6,decoder= True)
+    def forward(self,x):
+        return super(RSU6, self).forward(x)
+### RSU-5 ###
+class RSU5(RSU):#UNet05DRES(nn.Module):
+    def __init__(self,config):
+       super(RSU5, self).__init__(config,levelIndex=3, decoderLevelIndex=5,decoder= True)
+    def forward(self,x):
+        return super(RSU5, self).forward(x)
+### RSU-4 ###
+class RSU4(RSU):#UNet04DRES(nn.Module):
+    def __init__(self,config):
+       super(RSU4, self).__init__(config,levelIndex=4,decoderLevelIndex=4,decoder= False)
+    def forward(self,x):
+        return super(RSU4, self).forward(x)
+### RSU-3 ###
+class RSU3(RSU):#UNet03DRES(nn.Module):
+    def __init__(self,config):
+       super(RSU3, self).__init__(config,levelIndex=3,decoderLevelIndex=3,decoder= False)
+    def forward(self,x):
+        return super(RSU3, self).forward(x)
+### RSU-2 ###
+class RSU2(RSU):#UNet03DRES(nn.Module):
+    def __init__(self,config):
+       super(RSU2, self).__init__(config,levelIndex=2,decoderLevelIndex=2,decoder= False)
+    def forward(self,x):
+        return super(RSU2, self).forward(x)
+### RSU-1 ###
+class RSU1(RSU):#UNet03DRES(nn.Module):
+    def __init__(self,config):
+        super(RSU1, self).__init__(config,levelIndex=1,decoderLevelIndex=1,decoder= False)
+    def forward(self,x):
+        return super(RSU1, self).forward(x)
+##### U^2-Net ####
+class U2NET():
+
+    def __init__(self,config):
+        super(U2NET,self).__init__()
+
+        self.stage1 = RSU1(config)
+        self.pool12 = spconv.SparseMaxPool3d(2,stride=2)
+
+        self.stage2 = RSU2(config)
+        self.pool23 = spconv.SparseMaxPool3d(2,stride=2)
+
+        self.stage3 = RSU3(config)
+        self.pool34 = spconv.SparseMaxPool3d(2, stride=2)
+
+        self.stage4 = RSU4(config)
+        self.pool43 = spconv.SparseMaxPool3d(2, stride=2)
+        # decoder
+        self.stage3d = RSU5(config)
+        self.pool32 = nn.MaxUnpool3d(2, stride=2)
+        self.stage2d = RSU6(config)
+        self.pool21 = nn.MaxUnpool3d(2, stride=2)
+        self.stage1d = RSU7(config)
+
+    def forward(self,x):
+
+        hx = x
+
+        #stage 1
+        hx1 = self.stage1(hx)
+        hx = self.pool12(hx1)
+
+        #stage 2
+        hx2 = self.stage2(hx)
+        hx = self.pool23(hx2)
+
+        #stage 3
+        hx3 = self.stage3(hx)
+        hx = self.pool34(hx3)
+
+        #stage 4
+        hx4 = self.stage4(hx)
+        hx = self.pool43(hx4)
+        #-------------------- decoder --------------------
+
+        #stage 5
+        hx3d = self.stage5(hx)
+        hx = self.pool32(hx3d)
+
+        #stage 6
+        hx2d = self.stage6(hx)
+        hx = self.pool21(hx2d)
+        # stage 7
+        hx1d = self.stage7(hx)
+
+        return hx1,hx2,hx3,hx4,hx3d,hx2d,hx1d

@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from network.basic_block import Lovasz_loss
-from network.spvcnn import get_model as SPVCNN
+from network.spvcnn import U2NET
 from network.base_model import LightningBaseModel
 from network.basic_block import ResNetFCN
 
@@ -138,18 +138,17 @@ class get_model(LightningBaseModel):
         super(get_model, self).__init__(config)
         self.save_hyperparameters()
         self.baseline_only = config.baseline_only
-        self.num_classes = config.model_params.num_classes
-        self.hiden_size = config.model_params.hiden_size
+        self.num_classes = config.model_params1.num_classes
+        self.hiden_size = config.model_params1.hiden_size
         self.lambda_seg2d = config.train_params.lambda_seg2d
         self.lambda_xm = config.train_params.lambda_xm
-        self.scale_list = config.model_params.scale_list
+        self.scale_list = config.model_params1.scale_list
         self.num_scales = len(self.scale_list)
-
-        self.model_3d = SPVCNN(config)
+        self.model_3d = U2NET(config)
         if not self.baseline_only:
             self.model_2d = ResNetFCN(
-                backbone=config.model_params.backbone_2d,
-                pretrained=config.model_params.pretrained2d,
+                backbone=config.model_params1.backbone_2d,
+                pretrained=config.model_params1.pretrained2d,
                 config=config
             )
             self.fusion = xModalKD(config)

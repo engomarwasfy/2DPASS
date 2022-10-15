@@ -155,7 +155,7 @@ if __name__ == '__main__':
         os.system('cp {} {}'.format(configs.config_path, backup_dir))
         os.system('cp network/base_model.py {}'.format(backup_dir))
         os.system('cp network/spvcnn.py {}'.format(backup_dir))
-        os.system('cp {}.py {}'.format('network/' + configs['model_params']['model_architecture'], backup_dir))
+        os.system('cp {}.py {}'.format('network/' + configs['model_params1']['model_architecture'], backup_dir))
 
     # reproducibility
     torch.manual_seed(configs.seed)
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     config_path = configs.config_path
 
     train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
-    model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
+    model_file = importlib.import_module('network.' + configs['model_params1']['model_architecture'])
     my_model = model_file.get_model(configs)
 
     pl.seed_everything(configs.seed)
