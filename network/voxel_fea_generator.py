@@ -13,11 +13,12 @@ import spconv.pytorch as spconv
 
 
 class voxelization(nn.Module):
-    def __init__(self, coors_range_xyz, spatial_shape, scale_list):
+    def __init__(self, coors_range_xyz, spatial_shape, scale_list,indx):
         super(voxelization, self).__init__()
         self.spatial_shape = spatial_shape
         self.scale_list = scale_list + [1]
         self.coors_range_xyz = coors_range_xyz
+        self.indx = indx
 
     @staticmethod
     def sparse_quantize(pc, coors_range, spatial_shape):
@@ -35,16 +36,16 @@ class voxelization(nn.Module):
             bxyz_indx = torch.stack([data_dict['batch_idx'], xidx, yidx, zidx], dim=-1).long()
             unq, unq_inv, unq_cnt = torch.unique(bxyz_indx, return_inverse=True, return_counts=True, dim=0)
             unq = torch.cat([unq[:, 0:1], unq[:, [3, 2, 1]]], dim=1)
-            data_dict['scale_{}'.format(scale)] = {
-                'full_coors': bxyz_indx,
-                'coors_inv': unq_inv,
-                'coors': unq.type(torch.int32)
+            data_dict['scale_{}'.format(str(scale)+str(self.indx))] = {
+                f'full_coors{self.indx}': bxyz_indx,
+                f'coors_inv{self.indx}': unq_inv,
+                f'coors{self.indx}': unq.type(torch.int32)
             }
         return data_dict
 
 
 class voxel_3d_generator(nn.Module):
-    def __init__(self, in_channels, out_channels, coors_range_xyz, spatial_shape):
+    def __init__(self, in_channels, out_channels, coors_range_xyz, spatial_shape,indx):
         super(voxel_3d_generator, self).__init__()
         self.spatial_shape = spatial_shape
         self.coors_range_xyz = coors_range_xyz
@@ -53,6 +54,7 @@ class voxel_3d_generator(nn.Module):
             nn.ReLU(True),
             nn.Linear(out_channels, out_channels)
         )
+        self.indx = indx
 
     def prepare_input(self, point, grid_ind, inv_idx):
         pc_mean = torch_scatter.scatter_mean(point[:, :3], inv_idx, dim=0)[inv_idx]
@@ -71,21 +73,21 @@ class voxel_3d_generator(nn.Module):
     def forward(self, data_dict):
         pt_fea = self.prepare_input(
             data_dict['points'],
-            data_dict['scale_1']['full_coors'][:, 1:],
-            data_dict['scale_1']['coors_inv']
+            data_dict[f'scale_1{self.indx}'][f'full_coors{self.indx}'][:, 1:],
+            data_dict[f'scale_1{self.indx}'][f'coors_inv{self.indx}']
         )
         pt_fea = self.PPmodel(pt_fea)
 
-        features = torch_scatter.scatter_mean(pt_fea, data_dict['scale_1']['coors_inv'], dim=0)
-        data_dict['sparse_tensor'] = spconv.SparseConvTensor(
+        features = torch_scatter.scatter_mean(pt_fea, data_dict[f'scale_1{self.indx}'][f'coors_inv{self.indx}'], dim=0)
+        data_dict[f'sparse_tensor{self.indx}'] = spconv.SparseConvTensor(
             features=features,
-            indices=data_dict['scale_1']['coors'].int(),
+            indices=data_dict[f'scale_1{self.indx}'][f'coors{self.indx}'].int(),
             spatial_shape=np.int32(self.spatial_shape)[::-1].tolist(),
             batch_size=data_dict['batch_size']
         )
 
-        data_dict['coors'] = data_dict['scale_1']['coors']
-        data_dict['coors_inv'] = data_dict['scale_1']['coors_inv']
-        data_dict['full_coors'] = data_dict['scale_1']['full_coors']
+        data_dict[f'coors{self.indx}'] = data_dict[f'scale_1{self.indx}'][f'coors{self.indx}']
+        data_dict[f'coors_inv{self.indx}'] = data_dict[f'scale_1{self.indx}'][f'coors_inv{self.indx}']
+        data_dict[f'full_coors{self.indx}'] = data_dict[f'scale_1{self.indx}'][f'full_coors{self.indx}']
 
         return data_dict
