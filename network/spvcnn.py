@@ -49,19 +49,19 @@ class point_encoder(nn.Module):
         return torch_scatter.scatter_mean(p_fea, inv, dim=0), inv
 
     def forward(self, features, data_dict):
-        output, inv = self.downsample(data_dict[f'coors{self.indx}'], features)
+        output, inv = self.downsample(data_dict['coors'], features)
         identity = self.layer_in(features)
         output = self.PPmodel(output)[inv]
         output = torch.cat([identity, output], dim=1)
 
         v_feat = torch_scatter.scatter_mean(
-            self.layer_out(output[data_dict[f'coors_inv{self.indx}']]),
-            data_dict['scale_{}'.format(str(self.scale)+str(self.indx))][f'coors_inv{self.indx}'],
+            self.layer_out(output[data_dict['coors_inv']]),
+            data_dict['scale_{}'.format(self.scale)]['coors_inv'],
             dim=0
         )
-        data_dict[f'coors{self.indx}'] = data_dict['scale_{}'.format(str(self.scale)+str(self.indx))][f'coors{self.indx}']
-        data_dict[f'coors_inv{self.indx}'] = data_dict['scale_{}'.format(str(self.scale)+str(self.indx))][f'coors_inv{self.indx}']
-        data_dict[f'full_coors{self.indx}'] = data_dict['scale_{}'.format(str(self.scale)+str(self.indx))][f'full_coors{self.indx}']
+        data_dict['coors'] = data_dict['scale_{}'.format(self.scale)]['coors']
+        data_dict['coors_inv'] = data_dict['scale_{}'.format(self.scale)]['coors_inv']
+        data_dict['full_coors'] = data_dict['scale_{}'.format(self.scale)]['full_coors']
 
         return v_feat
 
@@ -82,26 +82,26 @@ class SPVBlock(nn.Module):
         self.indx = indx
 
     def forward(self, data_dict):
-        coors_inv_last = data_dict['scale_{}'.format(str(self.last_scale)+str(self.indx) )][f'coors_inv{self.indx}']
-        coors_inv = data_dict['scale_{}'.format(str(self.scale)+str(self.indx))][f'coors_inv{self.indx}']
+        coors_inv_last = data_dict['scale_{}'.format(self.last_scale )]['coors_inv']
+        coors_inv = data_dict['scale_{}'.format(self.scale)]['coors_inv']
 
         # voxel encoder
-        v_fea = self.v_enc(data_dict[f'sparse_tensor{self.indx}'])
+        v_fea = self.v_enc(data_dict['sparse_tensor'])
         data_dict['layer_{}'.format(self.layer_id)] = {}
         data_dict['layer_{}'.format(self.layer_id)]['pts_feat'] = v_fea.features
-        data_dict['layer_{}'.format(self.layer_id)]['full_coors'] = data_dict[f'full_coors{self.indx}']
+        data_dict['layer_{}'.format(self.layer_id)]['full_coors'] = data_dict['full_coors']
         v_fea_inv = torch_scatter.scatter_mean(v_fea.features[coors_inv_last], coors_inv, dim=0)
 
         # point encoder
         p_fea = self.p_enc(
-            features=data_dict[f'sparse_tensor{self.indx}'].features+v_fea.features,
+            features=data_dict['sparse_tensor'].features+v_fea.features,
             data_dict=data_dict
         )
 
         # fusion and pooling
-        data_dict[f'sparse_tensor{self.indx}'] = spconv.SparseConvTensor(
+        data_dict['sparse_tensor'] = spconv.SparseConvTensor(
             features=p_fea+v_fea_inv,
-            indices=data_dict[f'coors{self.indx}'],
+            indices=data_dict['coors'],
             spatial_shape=self.spatial_shape,
             batch_size=data_dict['batch_size']
         )
@@ -127,12 +127,12 @@ class criterion(nn.Module):
         )
         self.indx = indx
     def forward(self, data_dict):
-        loss_main_ce = self.ce_loss(data_dict[f'logits{self.indx}'], data_dict['labels'].long())
-        loss_main_lovasz = self.lovasz_loss(F.softmax(data_dict[f'logits{self.indx}'], dim=1), data_dict['labels'].long())
+        loss_main_ce = self.ce_loss(data_dict['logits'], data_dict['labels'].long())
+        loss_main_lovasz = self.lovasz_loss(F.softmax(data_dict['logits'], dim=1), data_dict['labels'].long())
         loss_main = loss_main_ce + loss_main_lovasz * self.lambda_lovasz
-        data_dict[f'loss_main_ce{self.indx}'] = loss_main_ce
-        data_dict[f'loss_main_lovasz{self.indx}'] = loss_main_lovasz
-        data_dict[f'loss{self.indx}'] += loss_main
+        data_dict['loss_main_ce'] = loss_main_ce
+        data_dict['loss_main_lovasz'] = loss_main_lovasz
+        data_dict['loss'] += loss_main
 
         return data_dict
 
@@ -210,8 +210,8 @@ class RSU(nn.Module):
         output = torch.cat(enc_feats, dim=1)
 
 
-        data_dict[f'logits{self.indx}'] = self.classifier(output)
-        data_dict[f'loss{self.indx}'] = 0.
+        data_dict['logits'] = self.classifier(output)
+        data_dict['loss'] = 0.
         data_dict = self.criterion(data_dict)
         return data_dict
 

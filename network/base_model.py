@@ -100,29 +100,24 @@ class LightningBaseModel(pl.LightningModule):
     def training_step(self, data_dict, batch_idx):
         data_dict = self.forward(data_dict)
         #TODO average on all layers 0,1,2,3,4,5,6
-        logits =data_dict[6]['logits1'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]\
-        +data_dict[6]['logits2'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]\
-        +data_dict[6]['logits3'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]
-        + data_dict[6]['logits4'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits5'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits6'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits7'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]
+        logits0,labels0,loss_main_ce0,lovasz_loss0,loss0= self.levelAttributes( data_dict, 0)
+        logits1,labels1,loss_main_ce1,lovasz_loss1,loss1= self.levelAttributes( data_dict, 1)
+        logits2,labels2,loss_main_ce2,lovasz_loss2,loss2= self.levelAttributes( data_dict, 2)
+        logits3,labels3,loss_main_ce3,lovasz_loss3,loss3= self.levelAttributes( data_dict, 3)
+        logits4,labels4,loss_main_ce4,lovasz_loss4,loss4= self.levelAttributes(data_dict, 4)
+        logits5,labels5,loss_main_ce5,lovasz_loss5,loss5= self.levelAttributes(data_dict, 5)
+        logits6,labels6,loss_main_ce6,lovasz_loss6,loss6= self.levelAttributes(data_dict, 6)
 
-        labels=data_dict[0]['labels'][data_dict[0]['labels'] != self.ignore_label]\
-        +data_dict[1]['labels'][data_dict[1]['labels'] != self.ignore_label]
-        +data_dict[2]['labels'][data_dict[2]['labels'] != self.ignore_label]\
-        +data_dict[3]['labels'][data_dict[3]['labels'] != self.ignore_label]\
-        +data_dict[4]['labels'][data_dict[4]['labels'] != self.ignore_label]\
-        +data_dict[5]['labels'][data_dict[5]['labels'] != self.ignore_label] \
-        + data_dict[6]['labels'][data_dict[6]['labels'] != self.ignore_label]
+        logits = logits6
+        labels = labels6
         self.train_acc(logits,labels)
-        self.log('train/acc', self.train_acc, on_epoch=True)
-        loss_main_ce= (data_dict[6]['loss_main_ce1']+data_dict[6]['loss_main_ce2']+data_dict[6]['loss_main_ce3']+ data_dict[6]['loss_main_ce4']+data_dict[6]['loss_main_ce5']+data_dict[6]['loss_main_ce6']+data_dict[6]['loss_main_ce7'])/7
-        self.log('train/loss_main_ce', data_dict[6]['loss_main_ce1'])
-        lovasz_loss=(data_dict[6]['loss_main_lovasz1'] + data_dict[6]['loss_main_lovasz2']+ data_dict[6]['loss_main_lovasz3'] + data_dict[6]['loss_main_lovasz4'] + data_dict[6]['loss_main_lovasz5'] + data_dict[6]['loss_main_lovasz6'] + data_dict[6]['loss_main_lovasz7'])/7
-        self.log('train/loss_main_lovasz',lovasz_loss )
+        self.log('train/acc', self.train_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        loss_main_ce= (loss_main_ce0+loss_main_ce1+loss_main_ce2+loss_main_ce3+loss_main_ce4+loss_main_ce5+loss_main_ce6)/7
+        self.log('train/loss_main_ce', loss_main_ce,on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        lovasz_loss= (lovasz_loss0+lovasz_loss1+lovasz_loss2+lovasz_loss3+lovasz_loss4+lovasz_loss5+lovasz_loss6)/7
+        self.log('train/loss_main_lovasz',lovasz_loss,on_step=True, on_epoch=True, prog_bar=True, logger=True )
 
-        return (data_dict[6]['loss1']+ data_dict[6]['loss2']+ data_dict[6]['loss3']+ data_dict[6]['loss4']+ data_dict[6]['loss5']+ data_dict[6]['loss6']+ data_dict[6]['loss7'])/7
+        return (loss0+loss1+loss2+loss3+loss4+loss5+loss6)/7
 
 
     def validation_step(self, data_dict, batch_idx):
@@ -138,10 +133,18 @@ class LightningBaseModel(pl.LightningModule):
                 vote_logits = vote_logits[:origin_len]
                 raw_labels = raw_labels[:origin_len]
         else:
+            vote_logits0,raw_labels0,loss0 =self.levelValidateAttributes(data_dict, 0)
+            vote_logits1,raw_labels1,loss1 =self.levelValidateAttributes(data_dict, 1)
+            vote_logits2,raw_labels2,loss2 =self.levelValidateAttributes(data_dict, 2)
+            vote_logits3,raw_labels3,loss3 =self.levelValidateAttributes(data_dict, 3)
+            vote_logits4,raw_labels4,loss4 =self.levelValidateAttributes(data_dict, 4)
+            vote_logits5,raw_labels5,loss5 =self.levelValidateAttributes(data_dict, 5)
+            vote_logits6,raw_labels6,loss6 =self.levelValidateAttributes(data_dict, 6)
+
             #TODO Use all networks logits
-            vote_logits = data_dict[6]['logits1'].cpu()+data_dict[6]['logits2'].cpu()+data_dict[6]['logits3'].cpu()+data_dict[6]['logits4'].cpu()+data_dict[6]['logits5'].cpu()+data_dict[6]['logits6'].cpu()+data_dict[6]['logits7'].cpu()
+            vote_logits = vote_logits6
             #TODO labels1,labels2,labels3,labels4,labels5,labels6 should be defined
-            raw_labels = data_dict[0]['labels'].squeeze(0).cpu()+ data_dict[1]['labels'].squeeze(0).cpu()+data_dict[2]['labels'].squeeze(0).cpu()+data_dict[3]['labels'].squeeze(0).cpu()+  data_dict[4]['labels'].squeeze(0).cpu()+ data_dict[5]['labels'].squeeze(0).cpu()+ data_dict[6]['labels'].squeeze(0).cpu()
+            raw_labels = raw_labels6
 
         prediction = vote_logits.argmax(1)
 
@@ -149,7 +152,7 @@ class LightningBaseModel(pl.LightningModule):
             prediction = prediction[raw_labels != self.ignore_label]
             raw_labels = raw_labels[raw_labels != self.ignore_label]
             prediction += 1
-            raw_labels += 1
+            raw_labels += 10
 
         self.val_acc(prediction, raw_labels)
         self.log('val/acc', self.val_acc, on_epoch=True)
@@ -158,7 +161,7 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels.cpu().detach().numpy(),
          )
 
-        return (data_dict[6]['loss1']+ data_dict[6]['loss2']+ data_dict[6]['loss3']+ data_dict[6]['loss4']+ data_dict[6]['loss5']+ data_dict[6]['loss6']+ data_dict[6]['loss7'])/7
+        return (loss0+loss1+loss2+loss3+loss4+loss5+loss6)/7
 
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']
@@ -282,3 +285,18 @@ class LightningBaseModel(pl.LightningModule):
         if not valid_gradients:
             print(f'detected inf or nan values in gradients. not updating model parameters')
             self.zero_grad()
+    def levelAttributes(self,data_dict,i):
+       logits =data_dict[i]['logits'].argmax(1)[data_dict[i]['labels'] != self.ignore_label]
+       labels=data_dict[i]['labels'][data_dict[i]['labels'] != self.ignore_label]
+       loss_main_ce =data_dict[i]['loss_main_ce']
+       lovasz_loss=data_dict[i]['loss_main_lovasz']
+       loss=data_dict[i]['loss']
+       #self.train_acc(logits, labels)
+       #self.log(f'train/acc{i}', self.train_acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+       #self.log(f'train/loss_main_ce{i}', loss_main_ce, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+       #self.log(f'train/loss_main_lovasz{i}', lovasz_loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+       #self.log(f'loss{i}', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+       return logits,labels,loss_main_ce,lovasz_loss,loss
+    def levelValidateAttributes(self,data_dict,i):
+        return data_dict[i]['logits'].cpu(),data_dict[i]['labels'].squeeze(0).cpu(),data_dict[0]['loss']
+
