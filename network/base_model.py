@@ -100,29 +100,29 @@ class LightningBaseModel(pl.LightningModule):
     def training_step(self, data_dict, batch_idx):
         data_dict = self.forward(data_dict)
         #TODO average on all layers 0,1,2,3,4,5,6
-        logits =data_dict[6]['logits1'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]\
-        +data_dict[6]['logits2'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]\
-        +data_dict[6]['logits3'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]
-        + data_dict[6]['logits4'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits5'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits6'].argmax(1)[data_dict[6]['labels'] != self.ignore_label] \
-        + data_dict[6]['logits7'].argmax(1)[data_dict[6]['labels'] != self.ignore_label]
+        logits =data_dict['logits1'].argmax(1)[data_dict['labels'] != self.ignore_label]\
+        +data_dict['logits2'].argmax(1)[data_dict['labels'] != self.ignore_label]\
+        +data_dict['logits3'].argmax(1)[data_dict['labels'] != self.ignore_label]
+        + data_dict['logits4'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        + data_dict['logits5'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        + data_dict['logits6'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        + data_dict['logits7'].argmax(1)[data_dict['labels'] != self.ignore_label]
 
-        labels=data_dict[0]['labels'][data_dict[0]['labels'] != self.ignore_label]\
-        +data_dict[1]['labels'][data_dict[1]['labels'] != self.ignore_label]
-        +data_dict[2]['labels'][data_dict[2]['labels'] != self.ignore_label]\
-        +data_dict[3]['labels'][data_dict[3]['labels'] != self.ignore_label]\
-        +data_dict[4]['labels'][data_dict[4]['labels'] != self.ignore_label]\
-        +data_dict[5]['labels'][data_dict[5]['labels'] != self.ignore_label] \
-        + data_dict[6]['labels'][data_dict[6]['labels'] != self.ignore_label]
+        labels=data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        +data_dict['labels'][data_dict['labels'] != self.ignore_label]
+        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        +data_dict['labels'][data_dict['labels'] != self.ignore_label] \
+        + data_dict['labels'][data_dict['labels'] != self.ignore_label]
         self.train_acc(logits,labels)
         self.log('train/acc', self.train_acc, on_epoch=True)
-        loss_main_ce= (data_dict[6]['loss_main_ce1']+data_dict[6]['loss_main_ce2']+data_dict[6]['loss_main_ce3']+ data_dict[6]['loss_main_ce4']+data_dict[6]['loss_main_ce5']+data_dict[6]['loss_main_ce6']+data_dict[6]['loss_main_ce7'])/7
-        self.log('train/loss_main_ce', data_dict[6]['loss_main_ce1'])
-        lovasz_loss=(data_dict[6]['loss_main_lovasz1'] + data_dict[6]['loss_main_lovasz2']+ data_dict[6]['loss_main_lovasz3'] + data_dict[6]['loss_main_lovasz4'] + data_dict[6]['loss_main_lovasz5'] + data_dict[6]['loss_main_lovasz6'] + data_dict[6]['loss_main_lovasz7'])/7
+        loss_main_ce= (data_dict['loss_main_ce1']+data_dict['loss_main_ce2']+data_dict['loss_main_ce3']+ data_dict['loss_main_ce4']+data_dict['loss_main_ce5']+data_dict['loss_main_ce6']+data_dict['loss_main_ce7'])/7
+        self.log('train/loss_main_ce', data_dict['loss_main_ce1'])
+        lovasz_loss=(data_dict['loss_main_lovasz1'] + data_dict['loss_main_lovasz2']+ data_dict['loss_main_lovasz3'] + data_dict['loss_main_lovasz4'] + data_dict['loss_main_lovasz5'] + data_dict['loss_main_lovasz6'] + data_dict['loss_main_lovasz7'])/7
         self.log('train/loss_main_lovasz',lovasz_loss )
 
-        return (data_dict[6]['loss1']+ data_dict[6]['loss2']+ data_dict[6]['loss3']+ data_dict[6]['loss4']+ data_dict[6]['loss5']+ data_dict[6]['loss6']+ data_dict[6]['loss7'])/7
+        return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
 
 
     def validation_step(self, data_dict, batch_idx):
@@ -139,9 +139,9 @@ class LightningBaseModel(pl.LightningModule):
                 raw_labels = raw_labels[:origin_len]
         else:
             #TODO Use all networks logits
-            vote_logits = data_dict[6]['logits1'].cpu()+data_dict[6]['logits2'].cpu()+data_dict[6]['logits3'].cpu()+data_dict[6]['logits4'].cpu()+data_dict[6]['logits5'].cpu()+data_dict[6]['logits6'].cpu()+data_dict[6]['logits7'].cpu()
+            vote_logits = data_dict['logits1'].cpu()+data_dict['logits2'].cpu()+data_dict['logits3'].cpu()+data_dict['logits4'].cpu()+data_dict['logits5'].cpu()+data_dict['logits6'].cpu()+data_dict['logits7'].cpu()
             #TODO labels1,labels2,labels3,labels4,labels5,labels6 should be defined
-            raw_labels = data_dict[0]['labels'].squeeze(0).cpu()+ data_dict[1]['labels'].squeeze(0).cpu()+data_dict[2]['labels'].squeeze(0).cpu()+data_dict[3]['labels'].squeeze(0).cpu()+  data_dict[4]['labels'].squeeze(0).cpu()+ data_dict[5]['labels'].squeeze(0).cpu()+ data_dict[6]['labels'].squeeze(0).cpu()
+            raw_labels = data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()+data_dict['labels'].squeeze(0).cpu()+data_dict['labels'].squeeze(0).cpu()+  data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()
 
         prediction = vote_logits.argmax(1)
 
@@ -158,7 +158,7 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels.cpu().detach().numpy(),
          )
 
-        return (data_dict[6]['loss1']+ data_dict[6]['loss2']+ data_dict[6]['loss3']+ data_dict[6]['loss4']+ data_dict[6]['loss5']+ data_dict[6]['loss6']+ data_dict[6]['loss7'])/7
+        return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
 
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']

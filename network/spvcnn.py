@@ -313,4 +313,4 @@ class U2NET(nn.Module):
         # stage 7
         hx1d = self.stage1d(hx2d)
 
-        return hx1,hx2,hx3,hx4,hx3d,hx2d,hx1d
+        return hx1d
