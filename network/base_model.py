@@ -17,6 +17,9 @@ from torchmetrics import Accuracy
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
 from utils.metric_util import IoU
 from utils.schedulers import cosine_schedule_with_warmup
+from utils.vis_utils import draw_bird_eye_view
+
+
 class LightningBaseModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
@@ -140,6 +143,7 @@ class LightningBaseModel(pl.LightningModule):
             prediction.cpu().detach().numpy(),
             raw_labels.cpu().detach().numpy(),
          )
+        draw_bird_eye_view(coords=data_dict['full_coors1'].cpu().detach().numpy())
         return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']
@@ -221,8 +225,8 @@ class LightningBaseModel(pl.LightningModule):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
         str_print = ''
-        self.log('val/mIoU', mIoU, on_epoch=True)
-        self.log('val/best_miou', best_miou, on_epoch=True)
+        self.log('val/mIoU', mIoU,prog_bar=True,on_epoch=True)
+        self.log('val/best_miou', best_miou, prog_bar=True,on_epoch=True)
         str_print += 'Validation per class iou: '
         try:
             iou_list = iou
@@ -230,6 +234,7 @@ class LightningBaseModel(pl.LightningModule):
                 str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
             str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
             self.print(str_print)
+            self.val_iou.hist_list=[]
         except:
             print('Error in printing iou')
     def test_epoch_end(self, outputs):
