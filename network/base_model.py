@@ -17,15 +17,13 @@ from torchmetrics import Accuracy
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
 from utils.metric_util import IoU
 from utils.schedulers import cosine_schedule_with_warmup
-
-
 class LightningBaseModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
         self.train_acc = Accuracy()
-        self.val_acc = Accuracy(compute_on_step=False)
-        self.val_iou = IoU(self.args['dataset_params'], compute_on_step=False)
+        self.val_acc = Accuracy(compute_on_step=True)
+        self.val_iou = IoU(self.args['dataset_params'], compute_on_step=True)
 
         if self.args['submit_to_server']:
             self.submit_dir = os.path.dirname(self.args['checkpoint']) + '/submit_' + datetime.now().strftime(
@@ -34,7 +32,6 @@ class LightningBaseModel(pl.LightningModule):
                 self.mapfile = yaml.safe_load(stream)
 
         self.ignore_label = self.args['dataset_params']['ignore_label']
-
     def configure_optimizers(self):
         if self.args['train_params']['optimizer'] == 'Adam':
             optimizer = torch.optim.Adam(self.parameters(),
@@ -81,50 +78,41 @@ class LightningBaseModel(pl.LightningModule):
             )
         else:
             raise NotImplementedError
-
         scheduler = {
             'scheduler': lr_scheduler,
             'interval': 'step' if self.args['train_params']["lr_scheduler"] == 'CosineAnnealingWarmRestarts' else 'epoch',
             'frequency': 1
         }
-
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
             'monitor': self.args.monitor,
         }
-
     def forward(self, data):
         pass
-
     def training_step(self, data_dict, batch_idx):
         data_dict = self.forward(data_dict)
-        #TODO average on all layers 0,1,2,3,4,5,6
-        logits =data_dict['logits1'].argmax(1)[data_dict['labels'] != self.ignore_label]\
-        +data_dict['logits2'].argmax(1)[data_dict['labels'] != self.ignore_label]\
-        +data_dict['logits3'].argmax(1)[data_dict['labels'] != self.ignore_label]
-        + data_dict['logits4'].argmax(1)[data_dict['labels'] != self.ignore_label] \
-        + data_dict['logits5'].argmax(1)[data_dict['labels'] != self.ignore_label] \
-        + data_dict['logits6'].argmax(1)[data_dict['labels'] != self.ignore_label] \
-        + data_dict['logits7'].argmax(1)[data_dict['labels'] != self.ignore_label]
-
-        labels=data_dict['labels'][data_dict['labels'] != self.ignore_label]\
-        +data_dict['labels'][data_dict['labels'] != self.ignore_label]
-        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
-        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
-        +data_dict['labels'][data_dict['labels'] != self.ignore_label]\
-        +data_dict['labels'][data_dict['labels'] != self.ignore_label] \
-        + data_dict['labels'][data_dict['labels'] != self.ignore_label]
+        logits =torch.cat([data_dict['logits1'].argmax(1)[data_dict['labels'] != self.ignore_label]\
+        ,data_dict['logits2'].argmax(1)[data_dict['labels'] != self.ignore_label]\
+        ,data_dict['logits3'].argmax(1)[data_dict['labels'] != self.ignore_label]\
+        ,data_dict['logits4'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        ,data_dict['logits5'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        ,data_dict['logits6'].argmax(1)[data_dict['labels'] != self.ignore_label] \
+        ,data_dict['logits7'].argmax(1)[data_dict['labels'] != self.ignore_label]],0)
+        labels=torch.cat([data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        ,data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        ,data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        ,data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        ,data_dict['labels'][data_dict['labels'] != self.ignore_label]\
+        ,data_dict['labels'][data_dict['labels'] != self.ignore_label] \
+        , data_dict['labels'][data_dict['labels'] != self.ignore_label]],0)
         self.train_acc(logits,labels)
         self.log('train/acc', self.train_acc, on_epoch=True)
         loss_main_ce= (data_dict['loss_main_ce1']+data_dict['loss_main_ce2']+data_dict['loss_main_ce3']+ data_dict['loss_main_ce4']+data_dict['loss_main_ce5']+data_dict['loss_main_ce6']+data_dict['loss_main_ce7'])/7
         self.log('train/loss_main_ce', data_dict['loss_main_ce1'])
         lovasz_loss=(data_dict['loss_main_lovasz1'] + data_dict['loss_main_lovasz2']+ data_dict['loss_main_lovasz3'] + data_dict['loss_main_lovasz4'] + data_dict['loss_main_lovasz5'] + data_dict['loss_main_lovasz6'] + data_dict['loss_main_lovasz7'])/7
         self.log('train/loss_main_lovasz',lovasz_loss )
-
         return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
-
-
     def validation_step(self, data_dict, batch_idx):
         indices = data_dict['indices']
         raw_labels = data_dict['raw_labels'].squeeze(1).cpu()
@@ -138,28 +126,21 @@ class LightningBaseModel(pl.LightningModule):
                 vote_logits = vote_logits[:origin_len]
                 raw_labels = raw_labels[:origin_len]
         else:
-            #TODO Use all networks logits
-            vote_logits = data_dict['logits1'].cpu()+data_dict['logits2'].cpu()+data_dict['logits3'].cpu()+data_dict['logits4'].cpu()+data_dict['logits5'].cpu()+data_dict['logits6'].cpu()+data_dict['logits7'].cpu()
-            #TODO labels1,labels2,labels3,labels4,labels5,labels6 should be defined
-            raw_labels = data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()+data_dict['labels'].squeeze(0).cpu()+data_dict['labels'].squeeze(0).cpu()+  data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()+ data_dict['labels'].squeeze(0).cpu()
-
+            vote_logits = torch.cat([data_dict['logits1'].cpu(),data_dict['logits2'].cpu(),data_dict['logits3'].cpu(),data_dict['logits4'].cpu(),data_dict['logits5'].cpu(),data_dict['logits6'].cpu(),data_dict['logits7'].cpu()],0)
+            raw_labels = torch.cat([data_dict['labels'].squeeze(0).cpu(), data_dict['labels'].squeeze(0).cpu(),data_dict['labels'].squeeze(0).cpu(),data_dict['labels'].squeeze(0).cpu(),data_dict['labels'].squeeze(0).cpu(),data_dict['labels'].squeeze(0).cpu(),data_dict['labels'].squeeze(0).cpu()],0)
         prediction = vote_logits.argmax(1)
-
         if self.ignore_label != 0:
             prediction = prediction[raw_labels != self.ignore_label]
             raw_labels = raw_labels[raw_labels != self.ignore_label]
             prediction += 1
             raw_labels += 1
-
         self.val_acc(prediction, raw_labels)
         self.log('val/acc', self.val_acc, on_epoch=True)
         self.val_iou(
             prediction.cpu().detach().numpy(),
             raw_labels.cpu().detach().numpy(),
          )
-
         return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
-
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']
         origin_len = data_dict['origin_len']
@@ -236,7 +217,6 @@ class LightningBaseModel(pl.LightningModule):
                     original_label.tofile(full_label_name)
 
         return data_dict['loss']
-
     def validation_epoch_end(self, outputs):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
@@ -252,7 +232,6 @@ class LightningBaseModel(pl.LightningModule):
             self.print(str_print)
         except:
             print('Error in printing iou')
-
     def test_epoch_end(self, outputs):
         if not self.args['submit_to_server']:
             iou, best_miou = self.val_iou.compute()

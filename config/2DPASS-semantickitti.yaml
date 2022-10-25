@@ -14,7 +14,7 @@ model_params:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -30,7 +30,7 @@ model_params1:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -46,7 +46,7 @@ model_params2:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -62,7 +62,7 @@ model_params3:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -78,7 +78,7 @@ model_params4:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -94,7 +94,7 @@ model_params5:
     - 4
     - 8
     - 16
-  hiden_size: 4
+  hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
