@@ -4,7 +4,7 @@ format_version: 1
 ## Model options
 model_params:
   model_architecture: "arch_2dpass"
-  input_dims: 4
+  input_dims: 8
   spatial_shape:
     - 1000
     - 1000
@@ -14,7 +14,8 @@ model_params:
     - 4
     - 8
     - 16
-  hiden_size: 8
+    - 32
+  hiden_size: 4
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -45,7 +46,6 @@ model_params2:
     - 2
     - 4
     - 8
-    - 16
   hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
@@ -60,8 +60,6 @@ model_params3:
   scale_list:
     - 2
     - 4
-    - 8
-    - 16
   hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
@@ -75,9 +73,6 @@ model_params4:
     - 8
   scale_list:
     - 2
-    - 4
-    - 8
-    - 16
   hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
@@ -90,10 +85,7 @@ model_params5:
     - 125
     - 8
   scale_list:
-    - 2
-    - 4
-    - 8
-    - 16
+    - 1
   hiden_size: 8
   num_classes: 20
   backbone_2d: resnet34
@@ -150,7 +142,7 @@ dataset_params:
     - 1168181
   train_data_loader:
     data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
-    batch_size: 4
+    batch_size: 8
     shuffle: True
     num_workers: 16
     rotate_aug: True
@@ -163,7 +155,7 @@ dataset_params:
     shuffle: False
     num_workers: 16
     # normal test
-    batch_size: 4
+    batch_size: 8
     rotate_aug: False
     flip_aug: False
     scale_aug: False

@@ -213,7 +213,7 @@ if __name__ == '__main__':
         print('Start testing...')
         assert num_gpu == 1, 'only support single GPU testing!'
         trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='ddp',
+                             accelerator='gpu',
                              resume_from_checkpoint=configs.checkpoint,
                              logger=tb_logger,
                              profiler=profiler)

@@ -1,8 +1,45 @@
+import os
+
 import matplotlib.pyplot as plt
 import matplotlib as matplotlib
 import numpy as np
-from utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
+from IPython.core.display_functions import display
 
+from utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
+import numpy as np
+import plotly
+import plotly.graph_objs as go
+
+import torch
+from torchsparse import SparseTensor
+from torchsparse.utils.quantize import sparse_quantize
+from torchsparse.utils.collate import sparse_collate
+
+COLOR_MAP = np.array(['#f59664', '#f5e664', '#963c1e', '#b41e50', '#ff0000',
+                      '#1e1eff', '#c828ff', '#5a1e96', '#ff00ff', '#ff96ff',
+                      '#4b004b', '#4b00af', '#00c8ff', '#3278ff', '#00af00',
+                      '#003c87', '#50f096', '#96f0ff', '#0000ff', '#ffffff'])
+
+LABEL_MAP = np.array([19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 0, 1, 19,
+                      19, 19, 2, 19, 19, 3, 19, 4, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 5, 6, 7, 19, 19, 19, 19, 19, 19,
+                      19, 8, 19, 19, 19, 9, 19, 19, 19, 10, 11, 12, 13,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 14, 15, 16, 19, 19, 19, 19, 19,
+                      19, 19, 17, 18, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
+                      19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19])
 
 # all classes
 NUSCENES_COLOR_PALETTE = [
@@ -119,7 +156,11 @@ SEMANTIC_KITTI_COLOR_PALETTE_SHORT_BGR = [
     [0, 0, 0],  # ignore
 ]
 SEMANTIC_KITTI_COLOR_PALETTE_SHORT = [(c[2], c[1], c[0]) for c in SEMANTIC_KITTI_COLOR_PALETTE_SHORT_BGR]
-
+def save_prediction(prediction,path,path_name):
+    pred_np = prediction.reshape((-1)).astype(np.int32)
+    # save scan
+    path = os.path.join(path,"predictions", path_name)
+    pred_np.tofile(path)
 def write_obj(points, file, rgb=False):
     fout = open('%s.obj' % file, 'w')
     for i in range(points.shape[0]):
@@ -180,9 +221,66 @@ def draw_points_image_depth(img, img_indices, depth, show=True, point_size=0.5):
         plt.show()
 
 
-def draw_bird_eye_view(coords, full_scale=4096):
-    plt.scatter(coords[:, 0], coords[:, 1], s=0.1)
+def draw_bird_eye_view(data_dict,prediction,labels,full_scale=4096):
+
+    color_palette = SEMANTIC_KITTI_COLOR_PALETTE
+    color_palette = np.array(color_palette) / 255.
+    # seg_labels[seg_labels == -100] = len(color_palette) - 1
+    colors = color_palette[data_dict['labels'].cpu().detach().numpy()]
+    colors = colors[:, [2, 1, 0]]
+    axes = [4096, 4096, 4096]
+    data = data_dict['full_coors1']
+
+    # Control Transparency
+    alpha = 0.9
+
+    # Control colour
+    # Plot figure
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+# Voxels is used to customizations of the
+# sizes, positions and colors.
+    ax.voxels(data)
+    plt.figure(figsize=(10, 6))
+    '''
+    plt.scatter(coords[:, 0], coords[:, 1], c=colors, alpha=0.5, s=0.1)
     plt.xlim([0, full_scale])
     plt.ylim([0, full_scale])
-    plt.gca().set_aspect('equal', adjustable='box')
+    plt.zlim([0, full_scale])
     plt.show()
+    '''
+    plt.savefig('figure.png')
+def configure_plotly_browser_state(coords,labels):
+
+    trace = go.Scatter3d(
+        x=coords[:, 0],
+        y=coords[:, 1],
+        z=coords[:, 2],
+        mode='markers',
+        marker={
+            'size': 1,
+            'opacity': 0.8,
+            'color': COLOR_MAP[labels].tolist(),
+        }
+    )
+    import IPython
+    display(IPython.core.display.HTML('''
+            <script src="/static/components/requirejs/require.js"></script>
+            <script>
+              requirejs.config({
+                paths: {
+                  base: '/static/base',
+                  plotly: 'https://cdn.plot.ly/plotly-latest.min.js?noext',
+                },
+              });
+            </script>
+            '''))
+    plotly.offline.init_notebook_mode(connected=False)
+
+    layout = go.Layout(
+        margin={'l': 0, 'r': 0, 'b': 0, 't': 0},
+        scene=dict(aspectmode='manual', aspectratio=dict(x=1, y=1, z=0.2))
+    )
+
+    plotly.offline.iplot(go.Figure(data=[trace], layout=layout))

@@ -87,9 +87,9 @@ class SPVBlock(nn.Module):
 
         # voxel encoder
         v_fea = self.v_enc(data_dict[f'sparse_tensor{self.indx}'])
-        data_dict['layer_{}'.format(self.layer_id)] = {}
-        data_dict['layer_{}'.format(self.layer_id)]['pts_feat'] = v_fea.features
-        data_dict['layer_{}'.format(self.layer_id)]['full_coors'] = data_dict[f'full_coors{self.indx}']
+        data_dict['layer_{}'.format(str(self.layer_id)+str(self.indx))] = {}
+        data_dict['layer_{}'.format(str(self.layer_id)+str(self.indx))]['pts_feat'] = v_fea.features
+        data_dict['layer_{}'.format(str(self.layer_id)+str(self.indx))]['full_coors'] = data_dict[f'full_coors{self.indx}']
         v_fea_inv = torch_scatter.scatter_mean(v_fea.features[coors_inv_last], coors_inv, dim=0)
 
         # point encoder
@@ -202,10 +202,20 @@ class RSU(nn.Module):
             data_dict = self.voxelizer(data_dict)
 
         data_dict = self.voxel_3d_generator(data_dict)
-
         enc_feats = []
+        '''
+        if(self.indx<=4 and self.indx!=1):
+            
+            for j in range (1,self.indx):
+                enc_feats.append(data_dict['layer_{}'.format(str(0)+str(j))]['pts_feat'])
+        if (self.indx > 4 and self.indx != 1):
+
+            for j in range(1, 4):
+                enc_feats.append(data_dict['layer_{}'.format(str(0) + str(j))]['pts_feat'])
+        '''
         for i in range(self.num_scales):
             enc_feats.append(self.spv_enc[i](data_dict))
+
 
         output = torch.cat(enc_feats, dim=1)
 
