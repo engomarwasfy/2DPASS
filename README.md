@@ -16,11 +16,13 @@ This repository is for **2DPASS** introduced in the following paper
 
 If you find our work useful in your research, please consider citing:
 ```latex
-@InProceedings{yan20222dpass,
-      title={2DPASS: 2D Priors Assisted Semantic Segmentation on LiDAR Point Clouds}, 
-      author={Xu Yan and Jiantao Gao and Chaoda Zheng and Chao Zheng and Ruimao Zhang and Shuguang Cui and Zhen Li},
-      year={2022},
-      booktitle={ECCV}
+@inproceedings{yan20222dpass,
+  title={2dpass: 2d priors assisted semantic segmentation on lidar point clouds},
+  author={Yan, Xu and Gao, Jiantao and Zheng, Chaoda and Zheng, Chao and Zhang, Ruimao and Cui, Shuguang and Li, Zhen},
+  booktitle={European Conference on Computer Vision},
+  pages={677--695},
+  year={2022},
+  organization={Springer}
 }
 
 @InProceedings{yan2022let,
@@ -113,7 +115,7 @@ The output will be written to `logs/SemanticKITTI/2DPASS_semkitti` by default.
 ### NuScenes
 ```shell script
 cd <root dir of this repo>
-python main.py --log_dir 2DPASS_nusc --config config/2DPASS-nuscenese.yaml --gpu 0 1 2
+python main.py --log_dir 2DPASS_nusc --config config/2DPASS-nuscenese.yaml --gpu 0 1 2 3
 ```
 
 ### Vanilla Training without 2DPASS
@@ -133,12 +135,20 @@ Here, `num_vote` is the number of views for the test-time-augmentation (TTA). We
 
 ## Model Zoo
 You can download the models with the scores below from [this Google drive folder](https://drive.google.com/drive/folders/1Xy6p_h827lv8J-2iZU8T6SLFkxfoXPBE?usp=sharing).
-|Model (validation)|Reported (mIoU)|Reproduced (mIoU)|Parameters|
+### SemanticKITTI
+|Model (validation)|mIoU (vanilla)|mIoU (TTA)|Parameters|
 |:---:|:---:|:---:|:---:|
-|2DPASS-SemanticKITTI|69.3%|70.0%|1.9M|
-|2DPASS-NuScenes|79.4%|79.5%|45.6M|
+|2DPASS (4scale-64dimension)|68.7%|70.0%|1.9M|
 
-Here, we train the model for SemanticKITTI with more epochs and thus gain the higher mIoU. **Note that the results on benchmarks are gained by training with additional validation set and using instance-level augmentation.**
+Here, we fine-tune the model on SemanticKITTI with more epochs and thus gain the higher mIoU. If you train with 64 epochs, it should be gained about 66% for vanilla and 69% after TTA.
+
+### NuScenes
+|Model (validation)|mIoU (vanilla)|mIoU (TTA)|Parameters|
+|:---:|:---:|:---:|:---:|
+|2DPASS (6scale-128dimension)|76.7%|79.6%|11.5M|
+|2DPASS (6scale-256dimension)|78.0%|80.5%|45.6M|
+
+**Note that the results on benchmarks are gained by training with additional validation set and using instance-level augmentation.**
 
 ## Acknowledgements
 Code is built based on [SPVNAS](https://github.com/mit-han-lab/spvnas), [Cylinder3D](https://github.com/xinge008/Cylinder3D), [xMUDA](https://github.com/valeoai/xmuda) and [SPCONV](https://github.com/traveller59/spconv).
