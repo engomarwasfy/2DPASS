@@ -144,7 +144,7 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels.cpu().detach().numpy(),
          )
         #save_prediction(prediction[0:(np.where(data_dict['batch_idx'].cpu().detach().numpy()=batch_idx))])
-        draw_bird_eye_view(data_dict,prediction.cpu().detach().numpy(),raw_labels.cpu().detach().numpy())
+        #draw_bird_eye_view(data_dict,prediction.cpu().detach().numpy(),raw_labels.cpu().detach().numpy())
         #configure_plotly_browser_state(coords=data_dict['full_coors1'].cpu().detach().numpy(),labels=raw_labels)
         return (data_dict['loss1']+ data_dict['loss2']+ data_dict['loss3']+ data_dict['loss4']+ data_dict['loss5']+ data_dict['loss6']+ data_dict['loss7'])/7
     def test_step(self, data_dict, batch_idx):
