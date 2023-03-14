@@ -133,7 +133,7 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels += 1
 
         self.val_acc(prediction, raw_labels)
-        self.log('val/acc', self.val_acc, on_epoch=True)
+        self.log('val/acc', self.val_acc,on_step=True, on_epoch=True, prog_bar=True, logger=True)
         self.val_iou(
             prediction.cpu().detach().numpy(),
             raw_labels.cpu().detach().numpy(),

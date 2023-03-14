@@ -47,7 +47,7 @@ def parse_config():
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
-    parser.add_argument('--save_top_k', type=int, default=1, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--save_top_k', type=int, default=10, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
     parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
@@ -206,7 +206,14 @@ if __name__ == '__main__':
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
-                             accumulate_grad_batches=1
+                             accumulate_grad_batches=1,
+                             log_every_n_steps=50,
+                             enable_checkpointing=True,
+                             auto_lr_find=True,
+                             auto_scale_batch_size=True,
+                             benchmark=True,
+                             precision=32,
+                             num_sanity_val_steps=2
                              )
         trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
 

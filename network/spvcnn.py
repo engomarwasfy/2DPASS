@@ -104,8 +104,8 @@ class SPVBlock(nn.Module):
             spatial_shape=self.spatial_shape,
             batch_size=data_dict['batch_size']
         )
-
-        return p_fea[coors_inv]
+        x=p_fea[coors_inv]
+        return x
 
 
 class get_model(LightningBaseModel):
