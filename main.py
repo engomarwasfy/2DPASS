@@ -209,11 +209,15 @@ if __name__ == '__main__':
                              accumulate_grad_batches=1,
                              log_every_n_steps=50,
                              enable_checkpointing=True,
+                             val_check_interval=0.01,
+                             limit_val_batches=0.01,
+                             limit_train_batches=0.001,
                              auto_lr_find=True,
                              auto_scale_batch_size=True,
                              benchmark=True,
                              precision=32,
-                             num_sanity_val_steps=2
+                             num_sanity_val_steps=2,
+
                              )
         trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
 
