@@ -16,7 +16,7 @@ import pytorch_lightning as pl
 from easydict import EasyDict
 from argparse import ArgumentParser
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.profiler import SimpleProfiler
+from pytorch_lightning.profilers import SimpleProfiler
 
 def load_yaml(file_name):
     with open(file_name, 'r') as f:
@@ -185,8 +185,7 @@ if __name__ == '__main__':
     print('Start testing...')
     assert num_gpu == 1, 'only support single GPU testing!'
     my_model = my_model.load_from_checkpoint(lastCheckpointPathFull,config=configs, strict=(not configs.pretrain2d))
-    trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                         accelerator='cuda',
+    trainer = pl.Trainer(accelerator='gpu',
                          #resume_from_checkpoint=configs.checkpoint,
                          logger=tb_logger,
                          profiler=profiler)

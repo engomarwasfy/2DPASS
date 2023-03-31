@@ -24,8 +24,8 @@ class LightningBaseModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.train_acc = Accuracy()
-        self.val_acc = Accuracy(compute_on_step=True)
+        self.train_acc = Accuracy(task='multiclass',num_classes=20, compute_on_step=True)
+        self.val_acc = Accuracy(task='multiclass',num_classes=20,compute_on_step=True)
         self.val_iou = IoU(self.args['dataset_params'], compute_on_step=True)
 
         if self.args['submit_to_server']:
@@ -220,7 +220,8 @@ class LightningBaseModel(pl.LightningModule):
 
         return data_dict['loss']
 
-    def validation_epoch_end(self, outputs):
+
+    def on_validation_epoch_end(self):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
         str_print = ''
@@ -240,7 +241,7 @@ class LightningBaseModel(pl.LightningModule):
         except:
             print('Error in printing iou')
 
-    def test_epoch_end(self, outputs):
+    def on_test_epoch_end(self):
         if not self.args['submit_to_server']:
             iou, best_miou = self.val_iou.compute()
             mIoU = np.nanmean(iou)

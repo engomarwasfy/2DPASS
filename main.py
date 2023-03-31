@@ -17,7 +17,7 @@ import pytorch_lightning as pl
 from easydict import EasyDict
 from argparse import ArgumentParser
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.profiler import SimpleProfiler
+from pytorch_lightning.profilers import SimpleProfiler
 from pytorch_lightning.callbacks import ModelCheckpoint, StochasticWeightAveraging
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from dataloader.dataset import get_model_class, get_collate_class
@@ -191,10 +191,8 @@ if __name__ == '__main__':
     if not configs.test:
         # init trainer
         print('Start training...')
-        trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='gpu',
+        trainer = pl.Trainer(accelerator='gpu',
                              max_epochs=configs['train_params']['max_num_epochs'],
-                             resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
                              callbacks=[checkpoint_callback,
                                         LearningRateMonitor(logging_interval='step'),
                                         EarlyStopping(monitor=configs.monitor,
@@ -212,8 +210,6 @@ if __name__ == '__main__':
                              val_check_interval=0.01,
                              limit_val_batches=0.01,
                              limit_train_batches=0.001,
-                             auto_lr_find=True,
-                             auto_scale_batch_size=True,
                              benchmark=True,
                              precision=32,
                              num_sanity_val_steps=2,
