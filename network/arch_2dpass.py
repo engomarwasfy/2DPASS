@@ -141,7 +141,7 @@ class get_model(LightningBaseModel):
     def __init__(self, config):
         super(get_model, self).__init__(config)
         self.save_hyperparameters()
-        self.baseline_only = config.baseline_only
+        self.baseline_only = config.hyper_parameters.baseline_only
         self.num_classes = config.model_params.num_classes
         self.hiden_size = config.model_params.hiden_size
         self.lambda_seg2d = config.train_params.lambda_seg2d

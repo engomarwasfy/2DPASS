@@ -24,12 +24,12 @@ class LightningBaseModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.train_acc = Accuracy(task='multiclass',num_classes=20, compute_on_step=True)
-        self.val_acc = Accuracy(task='multiclass',num_classes=20,compute_on_step=True)
+        self.train_acc = Accuracy(task='multiclass',num_classes=self.args['hyper_parameters']['num_classes'], compute_on_step=True)
+        self.val_acc = Accuracy(task='multiclass',num_classes=self.args['hyper_parameters']['num_classes'],compute_on_step=True)
         self.val_iou = IoU(self.args['dataset_params'], compute_on_step=True)
 
-        if self.args['submit_to_server']:
-            self.submit_dir = os.path.dirname(self.args['checkpoint']) + '/submit_' + datetime.now().strftime(
+        if self.args['hyper_parameters']['submit_to_server']:
+            self.submit_dir = os.path.dirname(self.args['hyper_parameters']['checkpoint']) + '/submit_' + datetime.now().strftime(
                 '%Y_%m_%d')
             with open(self.args['dataset_params']['label_mapping'], 'r') as stream:
                 self.mapfile = yaml.safe_load(stream)
@@ -77,7 +77,7 @@ class LightningBaseModel(pl.LightningModule):
                     num_epochs=self.args['train_params']['max_num_epochs'],
                     batch_size=self.args['dataset_params']['train_data_loader']['batch_size'],
                     dataset_size=self.args['dataset_params']['training_size'],
-                    num_gpu=len(self.args.gpu)
+                    num_gpu=len(self.args['hyper_parameters']['gpu'])
                 ),
             )
         else:
@@ -92,7 +92,7 @@ class LightningBaseModel(pl.LightningModule):
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
-            'monitor': self.args.monitor,
+            'monitor': self.args['hyper_parameters']['monitor'],
         }
 
     def forward(self, data):
@@ -116,7 +116,7 @@ class LightningBaseModel(pl.LightningModule):
         vote_logits = torch.zeros((len(raw_labels), self.num_classes))
         data_dict = self.forward(data_dict)
 
-        if self.args['test']:
+        if self.args['hyper_parameters']['test']:
             vote_logits.index_add_(0, indices.cpu(), data_dict['logits'].cpu())
             if self.args['dataset_params']['pc_dataset_type'] == 'SemanticKITTI_multiscan':
                 vote_logits = vote_logits[:origin_len]
@@ -165,7 +165,7 @@ class LightningBaseModel(pl.LightningModule):
             prediction += 1
             raw_labels += 1
 
-        if not self.args['submit_to_server']:
+        if not self.args['hyper_parameters']['submit_to_server']:
             self.val_acc(prediction, raw_labels)
             self.log('val/acc', self.val_acc, on_step=True, on_epoch=True ,prog_bar=True, logger=True)
             self.val_iou(
@@ -242,7 +242,7 @@ class LightningBaseModel(pl.LightningModule):
             print('Error in printing iou')
 
     def on_test_epoch_end(self):
-        if not self.args['submit_to_server']:
+        if not self.args['hyper_parameters']['submit_to_server']:
             iou, best_miou = self.val_iou.compute()
             mIoU = np.nanmean(iou)
             str_print = ''
