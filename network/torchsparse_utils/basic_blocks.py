@@ -24,8 +24,7 @@ class BasicConvolutionBlock(nn.Module):
             spnn.ReLU(True))
 
     def forward(self, x):
-        out = self.net(x)
-        return out
+        return self.net(x)
 
 
 class BasicDeconvolutionBlock(nn.Module):
@@ -73,6 +72,5 @@ class ResidualBlock(nn.Module):
         self.ReLU = spnn.ReLU(True)
 
     def forward(self, x):
-        out = self.ReLU(self.net(x) + self.downsample(x))
-        return out
+        return self.ReLU(self.net(x) + self.downsample(x))
 

@@ -56,12 +56,12 @@ class point_encoder(nn.Module):
 
         v_feat = torch_scatter.scatter_mean(
             self.layer_out(output[data_dict['coors_inv']]),
-            data_dict['scale_{}'.format(self.scale)]['coors_inv'],
-            dim=0
+            data_dict[f'scale_{self.scale}']['coors_inv'],
+            dim=0,
         )
-        data_dict['coors'] = data_dict['scale_{}'.format(self.scale)]['coors']
-        data_dict['coors_inv'] = data_dict['scale_{}'.format(self.scale)]['coors_inv']
-        data_dict['full_coors'] = data_dict['scale_{}'.format(self.scale)]['full_coors']
+        data_dict['coors'] = data_dict[f'scale_{self.scale}']['coors']
+        data_dict['coors_inv'] = data_dict[f'scale_{self.scale}']['coors_inv']
+        data_dict['full_coors'] = data_dict[f'scale_{self.scale}']['full_coors']
 
         return v_feat
 
@@ -81,14 +81,14 @@ class SPVBlock(nn.Module):
         self.p_enc = point_encoder(in_channels, out_channels, scale)
 
     def forward(self, data_dict):
-        coors_inv_last = data_dict['scale_{}'.format(self.last_scale)]['coors_inv']
-        coors_inv = data_dict['scale_{}'.format(self.scale)]['coors_inv']
+        coors_inv_last = data_dict[f'scale_{self.last_scale}']['coors_inv']
+        coors_inv = data_dict[f'scale_{self.scale}']['coors_inv']
 
         # voxel encoder
         v_fea = self.v_enc(data_dict['sparse_tensor'])
-        data_dict['layer_{}'.format(self.layer_id)] = {}
-        data_dict['layer_{}'.format(self.layer_id)]['pts_feat'] = v_fea.features
-        data_dict['layer_{}'.format(self.layer_id)]['full_coors'] = data_dict['full_coors']
+        data_dict[f'layer_{self.layer_id}'] = {}
+        data_dict[f'layer_{self.layer_id}']['pts_feat'] = v_fea.features
+        data_dict[f'layer_{self.layer_id}']['full_coors'] = data_dict['full_coors']
         v_fea_inv = torch_scatter.scatter_mean(v_fea.features[coors_inv_last], coors_inv, dim=0)
 
         # point encoder
@@ -143,13 +143,17 @@ class get_model(LightningBaseModel):
         # encoder layers
         self.spv_enc = nn.ModuleList()
         for i in range(self.num_scales):
-            self.spv_enc.append(SPVBlock(
-                in_channels=self.hiden_size,
-                out_channels=self.hiden_size,
-                indice_key='spv_'+ str(i),
-                scale=self.scale_list[i],
-                last_scale=self.scale_list[i-1] if i > 0 else 1,
-                spatial_shape=np.int32(self.spatial_shape // self.strides[i])[::-1].tolist())
+            self.spv_enc.append(
+                SPVBlock(
+                    in_channels=self.hiden_size,
+                    out_channels=self.hiden_size,
+                    indice_key=f'spv_{str(i)}',
+                    scale=self.scale_list[i],
+                    last_scale=self.scale_list[i - 1] if i > 0 else 1,
+                    spatial_shape=np.int32(self.spatial_shape // self.strides[i])[
+                        ::-1
+                    ].tolist(),
+                )
             )
 
         # decoder layer
@@ -168,10 +172,7 @@ class get_model(LightningBaseModel):
 
         data_dict = self.voxel_3d_generator(data_dict)
 
-        enc_feats = []
-        for i in range(self.num_scales):
-            enc_feats.append(self.spv_enc[i](data_dict))
-
+        enc_feats = [self.spv_enc[i](data_dict) for i in range(self.num_scales)]
         output = torch.cat(enc_feats, dim=1)
         data_dict['logits'] = self.classifier(output)
 

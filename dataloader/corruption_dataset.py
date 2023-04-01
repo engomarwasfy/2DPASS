@@ -47,9 +47,7 @@ class SemanticKITTIC(data.Dataset):
             annotated_data -= 1
             annotated_data[annotated_data == -1] = self.config['dataset_params']['ignore_label']
 
-        data_dict = {}
-        data_dict['xyz'] = points
-        data_dict['labels'] = annotated_data.astype(np.uint8)
+        data_dict = {'xyz': points, 'labels': annotated_data.astype(np.uint8)}
         data_dict['instance_label'] = instance_label
         data_dict['signal'] = raw_data[:, 3:4]
         data_dict['origin_len'] = origin_len

@@ -80,10 +80,7 @@ class point_image_dataset_semkitti(data.Dataset):
 
     def __len__(self):
         'Denotes the total number of samples'
-        if self.debug:
-            return 100 * self.num_vote
-        else:
-            return len(self.point_cloud_dataset)
+        return 100 * self.num_vote if self.debug else len(self.point_cloud_dataset)
 
     @staticmethod
     def select_points_in_frustum(points_2d, x1, y1, x2, y2):
@@ -97,12 +94,12 @@ class point_image_dataset_semkitti(data.Dataset):
         :param y2: lower bound
         :return: points (2D and 3D) that are in the frustum
         """
-        keep_ind = (points_2d[:, 0] > x1) * \
-                   (points_2d[:, 1] > y1) * \
-                   (points_2d[:, 0] < x2) * \
-                   (points_2d[:, 1] < y2)
-
-        return keep_ind
+        return (
+            (points_2d[:, 0] > x1)
+            * (points_2d[:, 1] > y1)
+            * (points_2d[:, 0] < x2)
+            * (points_2d[:, 1] < y2)
+        )
 
     def __getitem__(self, index):
         'Generates one sample of data'
@@ -236,23 +233,21 @@ class point_image_dataset_semkitti(data.Dataset):
             std = np.asarray(std, dtype=np.float32)
             image = (image - mean) / std
 
-        data_dict = {}
-        data_dict['point_feat'] = feat
-        data_dict['point_label'] = labels
-        data_dict['ref_xyz'] = ref_pc
-        data_dict['ref_label'] = ref_labels
-        data_dict['ref_index'] = ref_index
-        data_dict['mask'] = mask
-        data_dict['point_num'] = point_num
-        data_dict['origin_len'] = origin_len
-        data_dict['root'] = root
-
-        data_dict['img'] = image
-        data_dict['img_indices'] = img_indices
-        data_dict['img_label'] = img_label
-        data_dict['point2img_index'] = point2img_index
-
-        return data_dict
+        return {
+            'point_feat': feat,
+            'point_label': labels,
+            'ref_xyz': ref_pc,
+            'ref_label': ref_labels,
+            'ref_index': ref_index,
+            'mask': mask,
+            'point_num': point_num,
+            'origin_len': origin_len,
+            'root': root,
+            'img': image,
+            'img_indices': img_indices,
+            'img_label': img_label,
+            'point2img_index': point2img_index,
+        }
 
 
 @register_dataset
@@ -283,10 +278,7 @@ class point_image_dataset_mix_semkitti(data.Dataset):
 
     def __len__(self):
         'Denotes the total number of samples'
-        if self.debug:
-            return 100 * self.num_vote
-        else:
-            return len(self.point_cloud_dataset)
+        return 100 * self.num_vote if self.debug else len(self.point_cloud_dataset)
 
     @staticmethod
     def select_points_in_frustum(points_2d, x1, y1, x2, y2):
@@ -300,12 +292,12 @@ class point_image_dataset_mix_semkitti(data.Dataset):
         :param y2: lower bound
         :return: points (2D and 3D) that are in the frustum
         """
-        keep_ind = (points_2d[:, 0] > x1) * \
-                   (points_2d[:, 1] > y1) * \
-                   (points_2d[:, 0] < x2) * \
-                   (points_2d[:, 1] < y2)
-
-        return keep_ind
+        return (
+            (points_2d[:, 0] > x1)
+            * (points_2d[:, 1] > y1)
+            * (points_2d[:, 0] < x2)
+            * (points_2d[:, 1] < y2)
+        )
 
     def get_augment_scene(self, index, cut_scene=False):
         'Generates one sample of data'
@@ -442,23 +434,21 @@ class point_image_dataset_mix_semkitti(data.Dataset):
             std = np.asarray(std, dtype=np.float32)
             image = (image - mean) / std
 
-        data_dict = {}
-        data_dict['point_feat'] = feat
-        data_dict['point_label'] = labels
-        data_dict['ref_xyz'] = ref_pc
-        data_dict['ref_label'] = ref_labels
-        data_dict['ref_index'] = ref_index
-        data_dict['mask'] = mask
-        data_dict['point_num'] = point_num
-        data_dict['origin_len'] = origin_len
-        data_dict['root'] = root
-
-        data_dict['img'] = image
-        data_dict['img_indices'] = img_indices
-        data_dict['img_label'] = img_label
-        data_dict['point2img_index'] = point2img_index
-
-        return data_dict
+        return {
+            'point_feat': feat,
+            'point_label': labels,
+            'ref_xyz': ref_pc,
+            'ref_label': ref_labels,
+            'ref_index': ref_index,
+            'mask': mask,
+            'point_num': point_num,
+            'origin_len': origin_len,
+            'root': root,
+            'img': image,
+            'img_indices': img_indices,
+            'img_label': img_label,
+            'point2img_index': point2img_index,
+        }
 
     def __getitem__(self, index):
         data_dict = self.get_augment_scene(index)
@@ -472,7 +462,7 @@ class point_image_dataset_mix_semkitti(data.Dataset):
             cut_dict = self.get_augment_scene(cut_index, cut_scene=True)
             cutmix_data_dict = {}
             for keys in data_dict.keys():
-                if keys == 'point_num' or keys == 'origin_len':
+                if keys in ['point_num', 'origin_len']:
                     cutmix_data_dict[keys] = data_dict[keys] + cut_dict[keys]
                 elif keys == 'ref_index':
                     cut_dict[keys] = cut_dict[keys] + data_dict['origin_len']
@@ -566,10 +556,7 @@ class point_image_dataset_nus(data.Dataset):
 
     def __len__(self):
         'Denotes the total number of samples'
-        if self.debug:
-            return 100 * self.num_vote
-        else:
-            return len(self.point_cloud_dataset)
+        return 100 * self.num_vote if self.debug else len(self.point_cloud_dataset)
 
     def __getitem__(self, index):
         'Generates one sample of data'

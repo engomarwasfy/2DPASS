@@ -79,14 +79,18 @@ def build_loader(config, corruption):
         corruption=corruption,
         num_vote=val_config["batch_size"]
     )
-    test_dataset_loader = torch.utils.data.DataLoader(
-        dataset=dataset_type(test_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
+    return torch.utils.data.DataLoader(
+        dataset=dataset_type(
+            test_pt_dataset,
+            config,
+            val_config,
+            num_vote=val_config["batch_size"],
+        ),
         batch_size=val_config["batch_size"],
         collate_fn=get_collate_class(config['dataset_params']['collate_type']),
         shuffle=False,
-        num_workers=val_config["num_workers"]
+        num_workers=val_config["num_workers"],
     )
-    return test_dataset_loader
 
 
 if __name__ == '__main__':
@@ -123,13 +127,15 @@ if __name__ == '__main__':
     my_model = my_model.load_from_checkpoint(configs.checkpoint, config=configs)
 
     for idx, cor in enumerate(corruption['corruption_name']):
-        print('[{}/{}] Start robust testing for {}...'.format(idx + 1, len(corruption['corruption_name']) + 1, cor))
+        print(
+            f"[{idx + 1}/{len(corruption['corruption_name']) + 1}] Start robust testing for {cor}..."
+        )
         test_dataset_loader = build_loader(configs, cor)
 
         tester = pl.Trainer(
-            gpus=[i for i in range(num_gpu)],
+            gpus=list(range(num_gpu)),
             accelerator='ddp',
-            resume_from_checkpoint=configs.checkpoint
+            resume_from_checkpoint=configs.checkpoint,
         )
         results = tester.test(my_model, test_dataset_loader)
         results_dict[cor] = [results[0]['val/mIoU'], results[0]['val/acc']]

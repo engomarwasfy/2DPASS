@@ -83,7 +83,6 @@ def voxel_to_point(x, z, nearest=False):
                                  z.C,
                                  idx_query=z.idx_query,
                                  weights=z.weights)
-        new_tensor.additional_features = z.additional_features
         new_tensor.idx_query[x.s] = idx_query
         new_tensor.weights[x.s] = weights
         z.idx_query[x.s] = idx_query
@@ -95,6 +94,5 @@ def voxel_to_point(x, z, nearest=False):
                                  z.C,
                                  idx_query=z.idx_query,
                                  weights=z.weights)
-        new_tensor.additional_features = z.additional_features
-
+    new_tensor.additional_features = z.additional_features
     return new_tensor

@@ -20,7 +20,7 @@ class xModalKD(nn.Module):
         self.num_scales = len(self.scale_list)
 
         self.multihead_3d_classifier = nn.ModuleList()
-        for i in range(self.num_scales):
+        for _ in range(self.num_scales):
             self.multihead_3d_classifier.append(
                 nn.Sequential(
                     nn.Linear(self.hiden_size, 128),
@@ -29,7 +29,7 @@ class xModalKD(nn.Module):
             )
 
         self.multihead_fuse_classifier = nn.ModuleList()
-        for i in range(self.num_scales):
+        for _ in range(self.num_scales):
             self.multihead_fuse_classifier.append(
                 nn.Sequential(
                     nn.Linear(self.hiden_size, 128),
@@ -39,7 +39,7 @@ class xModalKD(nn.Module):
         self.leaners = nn.ModuleList()
         self.fcs1 = nn.ModuleList()
         self.fcs2 = nn.ModuleList()
-        for i in range(self.num_scales):
+        for _ in range(self.num_scales):
             self.leaners.append(nn.Sequential(nn.Linear(self.hiden_size, self.hiden_size)))
             self.fcs1.append(nn.Sequential(nn.Linear(self.hiden_size * 2, self.hiden_size)))
             self.fcs2.append(nn.Sequential(nn.Linear(self.hiden_size, self.hiden_size)))
@@ -62,9 +62,10 @@ class xModalKD(nn.Module):
 
     @staticmethod
     def p2img_mapping(pts_fea, p2img_idx, batch_idx):
-        img_feat = []
-        for b in range(batch_idx.max()+1):
-            img_feat.append(pts_fea[batch_idx == b][p2img_idx[b]])
+        img_feat = [
+            pts_fea[batch_idx == b][p2img_idx[b]]
+            for b in range(batch_idx.max() + 1)
+        ]
         return torch.cat(img_feat, 0)
 
     @staticmethod
@@ -85,15 +86,17 @@ class xModalKD(nn.Module):
         batch_idx = data_dict['batch_idx']
         point2img_index = data_dict['point2img_index']
         last_scale = self.scale_list[idx - 1] if idx > 0 else 1
-        img_feat = data_dict['img_scale{}'.format(self.scale_list[idx])]
-        pts_feat = data_dict['layer_{}'.format(idx)]['pts_feat']
-        coors_inv = data_dict['scale_{}'.format(last_scale)]['coors_inv']
+        img_feat = data_dict[f'img_scale{self.scale_list[idx]}']
+        pts_feat = data_dict[f'layer_{idx}']['pts_feat']
+        coors_inv = data_dict[f'scale_{last_scale}']['coors_inv']
 
         # 3D prediction
         pts_pred_full = self.multihead_3d_classifier[idx](pts_feat)
 
         # correspondence
-        pts_label_full = self.voxelize_labels(data_dict['labels'], data_dict['layer_{}'.format(idx)]['full_coors'])
+        pts_label_full = self.voxelize_labels(
+            data_dict['labels'], data_dict[f'layer_{idx}']['full_coors']
+        )
         pts_feat = self.p2img_mapping(pts_feat[coors_inv], point2img_index, batch_idx)
         pts_pred = self.p2img_mapping(pts_pred_full[coors_inv], point2img_index, batch_idx)
 
