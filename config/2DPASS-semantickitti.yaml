@@ -115,11 +115,11 @@ hyper_parameters:
   stop_patience: 50
   save_top_k: 3
   check_val_every_n_epoch: 1
-  SWA: True
+  SWA: False
   baseline_only: False
   test: False
   fine-tune: False
-  pretrain2d: False
+  pretrain2d: True
   num_vote: 1
   submit_to_server: False
   checkpoint: None
