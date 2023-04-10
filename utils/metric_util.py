@@ -9,7 +9,6 @@ def fast_hist(pred, label, n):
         n * label[k].astype(int) + pred[k], minlength=n ** 2)
     return bin_count[:n ** 2].reshape(n, n)
 
-
 def per_class_iu(hist):
     if hist.shape[0] == 0:
         return [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -42,5 +41,5 @@ class IoU(Metric):
         iou = per_class_iu(np.array(self.hist_list))
         if np.nanmean(iou) > self.best_miou:
             self.best_miou = np.nanmean(iou)
-        #self.hist_list = []
+        # self.hist_list = []
         return iou, self.best_miou

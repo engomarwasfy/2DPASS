@@ -15,7 +15,6 @@ import pytorch_lightning as pl
 from datetime import datetime
 from torchmetrics import Accuracy
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
-
 from utils.metric_util import IoU
 from utils.schedulers import cosine_schedule_with_warmup
 
@@ -24,12 +23,12 @@ class LightningBaseModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.train_acc = Accuracy(task='multiclass',num_classes=self.args['hyper_parameters']['num_classes'], compute_on_step=True)
-        self.val_acc = Accuracy(task='multiclass',num_classes=self.args['hyper_parameters']['num_classes'],compute_on_step=True)
-        self.val_iou = IoU(self.args['dataset_params'], compute_on_step=True)
+        self.train_acc = Accuracy(task='multiclass',num_classes=20)
+        self.val_acc = Accuracy(task='multiclass',num_classes=20,compute_on_step=False)
+        self.val_iou = IoU(self.args['dataset_params'], compute_on_step=False)
 
-        if self.args['hyper_parameters']['submit_to_server']:
-            self.submit_dir = os.path.dirname(self.args['hyper_parameters']['checkpoint']) + '/submit_' + datetime.now().strftime(
+        if self.args['submit_to_server']:
+            self.submit_dir = os.path.dirname(self.args['checkpoint']) + '/submit_' + datetime.now().strftime(
                 '%Y_%m_%d')
             with open(self.args['dataset_params']['label_mapping'], 'r') as stream:
                 self.mapfile = yaml.safe_load(stream)
@@ -77,7 +76,7 @@ class LightningBaseModel(pl.LightningModule):
                     num_epochs=self.args['train_params']['max_num_epochs'],
                     batch_size=self.args['dataset_params']['train_data_loader']['batch_size'],
                     dataset_size=self.args['dataset_params']['training_size'],
-                    num_gpu=len(self.args['hyper_parameters']['gpu'])
+                    num_gpu=len(self.args.gpu)
                 ),
             )
         else:
@@ -92,7 +91,7 @@ class LightningBaseModel(pl.LightningModule):
         return {
             'optimizer': optimizer,
             'lr_scheduler': scheduler,
-            'monitor': self.args['hyper_parameters']['monitor'],
+            'monitor': self.args.monitor,
         }
 
     def forward(self, data):
@@ -102,9 +101,9 @@ class LightningBaseModel(pl.LightningModule):
         data_dict = self.forward(data_dict)
         self.train_acc(data_dict['logits'].argmax(1)[data_dict['labels'] != self.ignore_label],
                        data_dict['labels'][data_dict['labels'] != self.ignore_label])
-        self.log('train/acc', self.train_acc, on_step=True, on_epoch=True, prog_bar=True)
-        self.log('train/loss_main_ce', data_dict['loss_main_ce'], on_step=True, on_epoch=True, prog_bar=True)
-        self.log('train/loss_main_lovasz', data_dict['loss_main_lovasz'], on_step=True, on_epoch=True, prog_bar=True)
+        self.log('train/acc', self.train_acc, on_epoch=True)
+        self.log('train/loss_main_ce', data_dict['loss_main_ce'])
+        self.log('train/loss_main_lovasz', data_dict['loss_main_lovasz'])
 
         return data_dict['loss']
 
@@ -116,7 +115,7 @@ class LightningBaseModel(pl.LightningModule):
         vote_logits = torch.zeros((len(raw_labels), self.num_classes))
         data_dict = self.forward(data_dict)
 
-        if self.args['hyper_parameters']['test']:
+        if self.args['test']:
             vote_logits.index_add_(0, indices.cpu(), data_dict['logits'].cpu())
             if self.args['dataset_params']['pc_dataset_type'] == 'SemanticKITTI_multiscan':
                 vote_logits = vote_logits[:origin_len]
@@ -134,12 +133,11 @@ class LightningBaseModel(pl.LightningModule):
             raw_labels += 1
 
         self.val_acc(prediction, raw_labels)
-        self.log('val/acc', self.val_acc,on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('val/acc', self.val_acc, on_epoch=True)
         self.val_iou(
             prediction.cpu().detach().numpy(),
             raw_labels.cpu().detach().numpy(),
          )
-
 
         return data_dict['loss']
 
@@ -165,9 +163,9 @@ class LightningBaseModel(pl.LightningModule):
             prediction += 1
             raw_labels += 1
 
-        if not self.args['hyper_parameters']['submit_to_server']:
+        if not self.args['submit_to_server']:
             self.val_acc(prediction, raw_labels)
-            self.log('val/acc', self.val_acc, on_step=True, on_epoch=True ,prog_bar=True, logger=True)
+            self.log('val/acc', self.val_acc, on_epoch=True)
             self.val_iou(
                 prediction.cpu().detach().numpy(),
                 raw_labels.cpu().detach().numpy(),
@@ -220,29 +218,22 @@ class LightningBaseModel(pl.LightningModule):
 
         return data_dict['loss']
 
-
     def on_validation_epoch_end(self):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
         str_print = ''
-        self.log('val/mIoU', mIoU, on_epoch=True, prog_bar=True, logger=True)
-        self.log('val/best_miou', best_miou, on_epoch=True, prog_bar=True, logger=True)
+        self.log('val/mIoU', mIoU, on_epoch=True)
+        self.log('val/best_miou', best_miou, on_epoch=True)
         str_print += 'Validation per class iou: '
-        try:
-            iou_list = iou
-            for class_name, class_iou in zip(self.val_iou.unique_label_str, iou_list):
-                str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
 
-            str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
-            self.print(str_print)
-            print(len(self.hist_list))
-            print("++++++++++++++++++++++")
-            #self.val_iou.hist_list = []
-        except:
-            print('Error in printing iou')
+        for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
+            str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
 
-    def on_test_epoch_end(self):
-        if not self.args['hyper_parameters']['submit_to_server']:
+        str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
+        self.print(str_print)
+
+    def test_epoch_end(self, outputs):
+        if not self.args['submit_to_server']:
             iou, best_miou = self.val_iou.compute()
             mIoU = np.nanmean(iou)
             str_print = ''

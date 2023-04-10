@@ -70,7 +70,7 @@ class point_image_dataset_semkitti(data.Dataset):
         self.num_vote = num_vote
         self.trans_std = trans_std
         self.max_dropout_ratio = max_dropout_ratio
-        self.debug = config['hyper_parameters']['debug']
+        self.debug = config['debug']
 
         self.bottom_crop = config['dataset_params']['bottom_crop']
         color_jitter = config['dataset_params']['color_jitter']

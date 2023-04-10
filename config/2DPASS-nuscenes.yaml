@@ -89,38 +89,7 @@ train_params:
   momentum: 0.9
   nesterov: True
   weight_decay: 1.0e-4
+
   lambda_seg2d: 1
   lambda_xm: 0.05
   lambda_lovasz: 1
-  swa_epoch_start: 1
-  swa_lrs: 0.24
-  annealing_epochs: 1
-hyper_parameters:
-  gpu: 0
-  seed: 0
-  config_path: "config/2DPASS-semantickitti.yaml"
-  log_dir: "default"
-  monitor : "val/mIoU"
-  stop_patience: 50
-  save_top_k: 3
-  check_val_every_n_epoch: 1
-  SWA: True
-  baseline_only: False
-  test: False
-  fine-tune: False
-  pretrain2d: False
-  num_vote: 1
-  submit_to_server: False
-  checkpoint: None
-  debug: False
-  gradient_clip_val: 1
-  accumulate_grad_batches: 1
-  log_every_n_steps: 1
-  enable_checkpointing: True
-  val_check_interval: 0.5
-  limit_val_batches: 1.0
-  limit_train_batches: 1.0
-  benchmark: True
-  precision: 32
-  num_sanity_val_steps: 2
-  num_classes: 20

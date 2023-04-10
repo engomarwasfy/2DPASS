@@ -39,22 +39,39 @@ def load_yaml(file_name):
 
 def parse_config():
     parser = ArgumentParser()
-    parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
-
     # general
+    parser.add_argument('--gpu', type=int, nargs='+', default=(0,), help='specify gpu devices')
+    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
+    # training
+    parser.add_argument('--log_dir', type=str, default='default', help='log location')
+    parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
+    parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
+    parser.add_argument('--save_top_k', type=int, default=1, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
+    parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
+    parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
+    # testing
+    parser.add_argument('--test', action='store_true', default=False, help='test mode')
+    parser.add_argument('--fine_tune', action='store_true', default=False, help='fine tune mode')
+    parser.add_argument('--pretrain2d', action='store_true', default=False, help='use pre-trained 2d network')
+    parser.add_argument('--num_vote', type=int, default=1, help='number of voting in the test')
+    parser.add_argument('--submit_to_server', action='store_true', default=False, help='submit on benchmark')
+    parser.add_argument('--checkpoint', type=str, default=None, help='load checkpoint')
     # debug
+    parser.add_argument('--debug', default=False, action='store_true')
 
     args = parser.parse_args()
     config = load_yaml(args.config_path)
     config.update(vars(args))  # override the configuration using the value in args
 
     # voting test
-    if config['hyper_parameters']['test']:
-        config['dataset_params']['val_data_loader']['batch_size'] = config['hyper_parameters']['num_vote']
-    if config['hyper_parameters']['num_vote'] > 1:
+    if args.test:
+        config['dataset_params']['val_data_loader']['batch_size'] = args.num_vote
+    if args.num_vote > 1:
         config['dataset_params']['val_data_loader']['rotate_aug'] = True
         config['dataset_params']['val_data_loader']['transform_aug'] = True
-    if  config['hyper_parameters']['debug']:
+    if args.debug:
         config['dataset_params']['val_data_loader']['batch_size'] = 2
         config['dataset_params']['val_data_loader']['num_workers'] = 0
 
@@ -68,7 +85,7 @@ def build_loader(config):
     val_config = config['dataset_params']['val_data_loader']
     train_dataset_loader, val_dataset_loader, test_dataset_loader = None, None, None
 
-    if not config['hyper_parameters']['test']:
+    if not config['test']:
         train_pt_dataset = pc_dataset(config, data_path=train_config['data_path'], imageset='train')
         val_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='val')
         train_dataset_loader = torch.utils.data.DataLoader(
@@ -118,20 +135,19 @@ if __name__ == '__main__':
     print(configs)
 
     # setting
-    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs['hyper_parameters']['gpu']))
-    num_gpu = len(configs['hyper_parameters']['gpu'])
+    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
+    num_gpu = len(configs.gpu)
 
     # output path
-    log_dir =configs['hyper_parameters']['log_dir']
     log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
-    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=log_dir, default_hp_metric=False)
-    os.makedirs(f'{log_folder}/{log_dir}', exist_ok=True)
-    profiler = SimpleProfiler(filename=f'{log_folder}/{log_dir}/profiler.txt')
+    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
+    os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
+    profiler = SimpleProfiler(filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
     np.set_printoptions(precision=4, suppress=True)
 
     # save the backup files
-    backup_dir = os.path.join(log_folder,log_dir, 'backup_files_%s' % str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')))
-    if not configs['hyper_parameters']['test']:
+    backup_dir = os.path.join(log_folder, configs.log_dir, 'backup_files_%s' % str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')))
+    if not configs['test']:
         os.makedirs(backup_dir, exist_ok=True)
         os.system('cp main.py {}'.format(backup_dir))
         os.system('cp dataloader/dataset.py {}'.format(backup_dir))
@@ -142,70 +158,62 @@ if __name__ == '__main__':
         os.system('cp {}.py {}'.format('network/' + configs['model_params']['model_architecture'], backup_dir))
 
     # reproducibility
-    torch.manual_seed(configs['hyper_parameters']['seed'])
+    torch.manual_seed(configs.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
-    np.random.seed(configs['hyper_parameters']['seed'])
+    np.random.seed(configs.seed)
     config_path = configs.config_path
 
     train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
     model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
     my_model = model_file.get_model(configs)
 
-    pl.seed_everything(configs['hyper_parameters']['seed'])
+    pl.seed_everything(configs.seed)
     checkpoint_callback = ModelCheckpoint(
-        monitor=configs['hyper_parameters']['monitor'],
+        monitor=configs.monitor,
         mode='max',
         save_last=True,
-        save_top_k=configs['hyper_parameters']['save_top_k'])
+        save_top_k=configs.save_top_k)
 
-    if configs['hyper_parameters']['checkpoint'] is not None and configs['hyper_parameters']['checkpoint']!='None' :
+    if configs.checkpoint is not None:
         print('load pre-trained model...')
-        if configs['hyper_parameters']['fine-tune'] or configs['hyper_parameters']['test'] or configs['hyper_parameters']['pretrain2d']:
-            my_model = my_model.load_from_checkpoint(configs['hyper_parameters']['checkpoint'], config=configs, strict=(not configs['hyper_parameters']['pretrain2d']))
+        if configs.fine_tune or configs.test or configs.pretrain2d:
+            my_model = my_model.load_from_checkpoint(configs.checkpoint, config=configs, strict=(not configs.pretrain2d))
         else:
             # continue last training
-            my_model = my_model.load_from_checkpoint(configs['hyper_parameters']['checkpoint'])
+            my_model = my_model.load_from_checkpoint(configs.checkpoint)
 
-    if configs['hyper_parameters']['SWA']:
-        swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start,swa_lrs=configs.train_params.swa_lrs ,annealing_epochs=configs.train_params.annealing_epochs)]
+    if configs.SWA:
+        swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start, annealing_epochs=1)]
     else:
         swa = []
 
-    if not configs['hyper_parameters']['test']:
+    if not configs.test:
         # init trainer
         print('Start training...')
-        trainer = pl.Trainer(accelerator='gpu',
+        trainer = pl.Trainer(accelerator='cuda',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              callbacks=[checkpoint_callback,
                                         LearningRateMonitor(logging_interval='step'),
-                                        EarlyStopping(monitor=configs['hyper_parameters']['monitor'],
-                                                      patience=configs['hyper_parameters']['stop_patience'],
+                                        EarlyStopping(monitor=configs.monitor,
+                                                      patience=configs.stop_patience,
                                                       mode='max',
                                                       verbose=True),
                                         ] + swa,
                              logger=tb_logger,
                              profiler=profiler,
-                             check_val_every_n_epoch=configs['hyper_parameters']['check_val_every_n_epoch'],
-                             gradient_clip_val= configs['hyper_parameters']['gradient_clip_val'],
-                             accumulate_grad_batches=configs['hyper_parameters']['accumulate_grad_batches'],
-                             log_every_n_steps=configs['hyper_parameters']['log_every_n_steps'],
-                             enable_checkpointing=configs['hyper_parameters']['enable_checkpointing'],
-                             val_check_interval=configs['hyper_parameters']['val_check_interval'],
-                             limit_val_batches=configs['hyper_parameters']['limit_val_batches'],
-                             limit_train_batches=configs['hyper_parameters']['limit_train_batches'],
-                             benchmark=configs['hyper_parameters']['benchmark'],
-                             precision=configs['hyper_parameters']['precision'],
-                             num_sanity_val_steps=configs['hyper_parameters']['num_sanity_val_steps'],
-
+                             check_val_every_n_epoch=configs.check_val_every_n_epoch,
+                             gradient_clip_val=1,
+                             accumulate_grad_batches=1
                              )
         trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
 
     else:
         print('Start testing...')
         assert num_gpu == 1, 'only support single GPU testing!'
-        trainer = pl.Trainer(accelerator='gpu',
-                             resume_from_checkpoint=configs['hyper_parameters']['checkpoint'],
+        trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
+                             accelerator='ddp',
+                             resume_from_checkpoint=configs.checkpoint,
                              logger=tb_logger,
                              profiler=profiler)
-        trainer.test(my_model, test_dataset_loader if configs['hyper_parameters']['submit_to_server'] else val_dataset_loader)
+        trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
