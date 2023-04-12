@@ -13,7 +13,7 @@ import numpy as np
 import pytorch_lightning as pl
 
 from datetime import datetime
-from pytorch_lightning.metrics import Accuracy
+from torchmetrics import Accuracy
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingWarmRestarts, CosineAnnealingLR
 from utils.metric_util import IoU
 from utils.schedulers import cosine_schedule_with_warmup
@@ -24,8 +24,8 @@ class LightningBaseModel(pl.LightningModule):
         super().__init__()
         self.args = args
         self.criterion = criterion
-        self.train_acc = Accuracy()
-        self.val_acc = Accuracy(compute_on_step=False)
+        self.train_acc = Accuracy(task='multiclass', num_classes=20)
+        self.val_acc = Accuracy(task='multiclass', num_classes=20, compute_on_step=False)
         self.val_iou = IoU(self.args['dataset_params'], compute_on_step=False)
 
         if self.args['submit_to_server']:
@@ -249,7 +249,7 @@ class LightningBaseModel(pl.LightningModule):
         return data_dict['loss']
 
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
         str_print = ''
