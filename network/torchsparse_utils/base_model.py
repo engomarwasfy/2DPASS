@@ -262,7 +262,7 @@ class LightningBaseModel(pl.LightningModule):
         return data_dict['loss']
 
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         iou, best_miou = self.val_iou.compute()
         mIoU = np.nanmean(iou)
         str_print = ''
@@ -292,3 +292,17 @@ class LightningBaseModel(pl.LightningModule):
             str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
             self.print(str_print)
 
+    def on_after_backward(self) -> None:
+        """
+        Skipping updates in case of unstable gradients
+        https://github.com/Lightning-AI/lightning/issues/4956
+        """
+        valid_gradients = True
+        for name, param in self.named_parameters():
+            if param.grad is not None:
+                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
+                if not valid_gradients:
+                    break
+        if not valid_gradients:
+            print(f'detected inf or nan values in gradients. not updating model parameters')
+            self.zero_grad()

@@ -143,8 +143,8 @@ if __name__ == '__main__':
 
     # reproducibility
     torch.manual_seed(configs['hyper_parameters']['seed'])
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = False
     np.random.seed(configs['hyper_parameters']['seed'])
     config_path = configs.config_path
 
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     if not configs['hyper_parameters']['test']:
         # init trainer
         print('Start training...')
-        trainer = pl.Trainer(accelerator='gpu',
+        trainer = pl.Trainer(accelerator='cuda',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              callbacks=[checkpoint_callback,
                                         LearningRateMonitor(logging_interval='step'),
@@ -187,7 +187,7 @@ if __name__ == '__main__':
                              logger=tb_logger,
                              profiler=profiler,
                              check_val_every_n_epoch=configs['hyper_parameters']['check_val_every_n_epoch'],
-                             gradient_clip_val= configs['hyper_parameters']['gradient_clip_val'],
+                             #gradient_clip_val= configs['hyper_parameters']['gradient_clip_val'],
                              accumulate_grad_batches=configs['hyper_parameters']['accumulate_grad_batches'],
                              log_every_n_steps=configs['hyper_parameters']['log_every_n_steps'],
                              enable_checkpointing=configs['hyper_parameters']['enable_checkpointing'],
@@ -195,8 +195,9 @@ if __name__ == '__main__':
                              limit_val_batches=configs['hyper_parameters']['limit_val_batches'],
                              limit_train_batches=configs['hyper_parameters']['limit_train_batches'],
                              benchmark=configs['hyper_parameters']['benchmark'],
-                             precision=configs['hyper_parameters']['precision'],
+                             #precision=configs['hyper_parameters']['precision'],
                              num_sanity_val_steps=configs['hyper_parameters']['num_sanity_val_steps'],
+                             #detect_anomaly=True
 
                              )
         trainer.fit(my_model, train_dataset_loader, val_dataset_loader)

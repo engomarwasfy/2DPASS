@@ -57,8 +57,8 @@ dataset_params:
     - 1168181
 
   train_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
-    batch_size: 8
+    data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    batch_size: 2
     shuffle: True
     num_workers: 8
     rotate_aug: True
@@ -68,10 +68,10 @@ dataset_params:
     dropout_aug: True
 
   val_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
+    data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
     num_workers: 8
-    batch_size: 8
+    batch_size: 2
     rotate_aug: False
     flip_aug: False
     scale_aug: False
@@ -99,13 +99,13 @@ train_params:
 hyper_parameters:
   gpu: [0]
   seed: 0
-  config_path: "config/2DPASS-semantickitti.yaml"
-  log_dir: "2DPASS_semkitti"
+  config_path: "config/SPVCNN-semantickitti.yaml"
+  log_dir: "SPVCNN_semkitti"
   monitor : "val/mIoU"
   stop_patience: 50
   save_top_k: 3
   check_val_every_n_epoch: 1
-  SWA: True
+  SWA: False
   baseline_only: False
   test: False
   fine-tune: False
@@ -114,8 +114,8 @@ hyper_parameters:
   submit_to_server: False
   checkpoint: None
   debug: False
-  gradient_clip_val: 1
-  accumulate_grad_batches: 1
+  #gradient_clip_val: 1
+  accumulate_grad_batches: 4
   log_every_n_steps: 50
   enable_checkpointing: True
   val_check_interval: 0.5

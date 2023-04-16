@@ -273,7 +273,7 @@ class point_image_dataset_mix_semkitti(data.Dataset):
         self.num_vote = num_vote
         self.trans_std = trans_std
         self.max_dropout_ratio = max_dropout_ratio
-        self.debug = config['debug']
+        self.debug = config['hyper_parameters']['debug']
 
         self.bottom_crop = config['dataset_params']['bottom_crop']
         color_jitter = config['dataset_params']['color_jitter']
@@ -715,7 +715,7 @@ class voxel_dataset(data.Dataset):
         self.num_vote = num_vote
         self.trans_std = trans_std
         self.max_dropout_ratio = max_dropout_ratio
-        self.debug = config['debug']
+        self.debug = config['hyper_parameters']['debug']
 
     def __len__(self):
         'Denotes the total number of samples'

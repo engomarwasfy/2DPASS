@@ -16,10 +16,7 @@ model_params:
     - 4
     - 8
     - 16
-    - 16
-    - 16
-
-  hiden_size: 256
+  hiden_size: 64
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
@@ -77,8 +74,8 @@ dataset_params:
     - 1168181
 
   train_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
-    batch_size: 4
+    data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    batch_size: 2
     shuffle: True
     num_workers: 8
     rotate_aug: True
@@ -88,12 +85,12 @@ dataset_params:
     dropout_aug: True
 
   val_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
+    data_path: "/media/wasfy/One\ Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
     num_workers: 8
 
     # normal test
-    batch_size: 4
+    batch_size: 2
     rotate_aug: False
     flip_aug: False
     scale_aug: False
@@ -120,7 +117,7 @@ train_params:
   swa_lrs: 0.24
   annealing_epochs: 1
 hyper_parameters:
-  gpu: 0
+  gpu: [0]
   seed: 0
   config_path: "config/2DPASS-semantickitti.yaml"
   log_dir: "default"
@@ -128,8 +125,8 @@ hyper_parameters:
   stop_patience: 50
   save_top_k: 3
   check_val_every_n_epoch: 1
-  SWA: True
-  baseline_only: False
+  SWA: False
+  baseline_only: True
   test: False
   fine-tune: False
   pretrain2d: False
@@ -137,14 +134,14 @@ hyper_parameters:
   submit_to_server: False
   checkpoint: None
   debug: False
+  gradient_clip_val: 0
+  accumulate_grad_batches: 1
+  log_every_n_steps: 50
+  enable_checkpointing: True
   val_check_interval: 0.5
   limit_val_batches: 1.0
   limit_train_batches: 1.0
-  enable_checkpointing: True
-  val_check_interval: 1
-  limit_val_batches: 1
-  limit_train_batches: 1
   benchmark: True
-  precision: 32
+  precision: '64'
   num_sanity_val_steps: 2
   num_classes: 20
