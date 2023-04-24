@@ -12,7 +12,7 @@ def fast_hist(pred, label, n):
 
 def per_class_iu(hist):
     if hist.shape[0] == 0:
-        return 0
+        return np.zeros(20)
     else:
         hist2D=hist.sum(axis=0)
         print(hist2D.shape)
