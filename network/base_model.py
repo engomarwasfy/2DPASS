@@ -233,6 +233,7 @@ class LightningBaseModel(pl.LightningModule):
             self.print(str_print)
         except:
             print('Error in printing iou')
+        self.val_iou.hist_list=[]
 
     def test_epoch_end(self, outputs):
         if not self.args['submit_to_server']:
@@ -248,6 +249,7 @@ class LightningBaseModel(pl.LightningModule):
 
             str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
             self.print(str_print)
+            self.val_iou.hist_list = []
 
     def on_after_backward(self) -> None:
         """
