@@ -240,6 +240,7 @@ class LightningBaseModel(pl.LightningModule):
             #self.val_iou.hist_list = []
         except:
             print('Error in printing iou')
+        self.val_iou.hist_list=[]
 
     def on_test_epoch_end(self):
         if not self.args['hyper_parameters']['submit_to_server']:
@@ -255,6 +256,7 @@ class LightningBaseModel(pl.LightningModule):
 
             str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
             self.print(str_print)
+            self.val_iou.hist_list = []
 
     def on_after_backward(self) -> None:
         """
