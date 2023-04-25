@@ -75,8 +75,8 @@ dataset_params:
     - 1168181
 
   train_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
-    batch_size: 8
+    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    batch_size: 4
     shuffle: True
     num_workers: 8
     rotate_aug: True
@@ -86,12 +86,12 @@ dataset_params:
     dropout_aug: True
 
   val_data_loader:
-    data_path: "./dataset/SemanticKitti/dataset/sequences/"
+    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
     num_workers: 8
 
     # normal test
-    batch_size: 8
+    batch_size: 4
     rotate_aug: False
     flip_aug: False
     scale_aug: False

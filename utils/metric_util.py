@@ -1,5 +1,5 @@
 import numpy as np
-from pytorch_lightning.metrics import Metric
+from torchmetrics import Metric
 from dataloader.pc_dataset import get_SemKITTI_label_name
 
 
@@ -11,7 +11,11 @@ def fast_hist(pred, label, n):
 
 
 def per_class_iu(hist):
-    return np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
+
+    if  isinstance(hist, int) or hist.shape[0] == 0:
+        return np.zeros(20)
+    else:
+        return np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist))
 
 
 def fast_hist_crop(output, target, unique_label):
@@ -37,5 +41,5 @@ class IoU(Metric):
         iou = per_class_iu(sum(self.hist_list))
         if np.nanmean(iou) > self.best_miou:
             self.best_miou = np.nanmean(iou)
-        self.hist_list = []
+        #self.hist_list = []
         return iou, self.best_miou
