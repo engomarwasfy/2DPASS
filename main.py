@@ -204,7 +204,7 @@ if __name__ == '__main__':
                              logger=tb_logger,
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
-                             #gradient_clip_val=1,
+                             gradient_clip_val=1,
                              accumulate_grad_batches=1,
                             #log_every_n_steps = 10 ,
                             #enable_checkpointing = True,
