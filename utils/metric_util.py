@@ -42,5 +42,5 @@ class IoU(Metric):
         iou = per_class_iu(np.array(self.hist_list))
         if np.nanmean(iou) > self.best_miou:
             self.best_miou = np.nanmean(iou)
-        self.hist_list = []
+        #self.hist_list = []
         return iou, self.best_miou
