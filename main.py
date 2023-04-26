@@ -106,25 +106,24 @@ def build_loader(config):
             pin_memory=True,
             num_workers=val_config["num_workers"]
         )
+    elif config['submit_to_server']:
+        test_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='test', num_vote=val_config["batch_size"])
+        test_dataset_loader = torch.utils.data.DataLoader(
+            dataset=dataset_type(test_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
+            batch_size=val_config["batch_size"],
+            collate_fn=get_collate_class(config['dataset_params']['collate_type']),
+            shuffle=val_config["shuffle"],
+            num_workers=val_config["num_workers"]
+        )
     else:
-        if config['submit_to_server']:
-            test_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='test', num_vote=val_config["batch_size"])
-            test_dataset_loader = torch.utils.data.DataLoader(
-                dataset=dataset_type(test_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
-                batch_size=val_config["batch_size"],
-                collate_fn=get_collate_class(config['dataset_params']['collate_type']),
-                shuffle=val_config["shuffle"],
-                num_workers=val_config["num_workers"]
-            )
-        else:
-            val_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='val', num_vote=val_config["batch_size"])
-            val_dataset_loader = torch.utils.data.DataLoader(
-                dataset=dataset_type(val_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
-                batch_size=val_config["batch_size"],
-                collate_fn=get_collate_class(config['dataset_params']['collate_type']),
-                shuffle=val_config["shuffle"],
-                num_workers=val_config["num_workers"]
-            )
+        val_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='val', num_vote=val_config["batch_size"])
+        val_dataset_loader = torch.utils.data.DataLoader(
+            dataset=dataset_type(val_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
+            batch_size=val_config["batch_size"],
+            collate_fn=get_collate_class(config['dataset_params']['collate_type']),
+            shuffle=val_config["shuffle"],
+            num_workers=val_config["num_workers"]
+        )
 
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
 
@@ -146,16 +145,22 @@ if __name__ == '__main__':
     np.set_printoptions(precision=4, suppress=True)
 
     # save the backup files
-    backup_dir = os.path.join(log_folder, configs.log_dir, 'backup_files_%s' % str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')))
+    backup_dir = os.path.join(
+        log_folder,
+        configs.log_dir,
+        f"backup_files_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')}",
+    )
     if not configs['test']:
         os.makedirs(backup_dir, exist_ok=True)
-        os.system('cp main.py {}'.format(backup_dir))
-        os.system('cp dataloader/dataset.py {}'.format(backup_dir))
-        os.system('cp dataloader/pc_dataset.py {}'.format(backup_dir))
-        os.system('cp {} {}'.format(configs.config_path, backup_dir))
-        os.system('cp network/base_model.py {}'.format(backup_dir))
-        os.system('cp network/baseline.py {}'.format(backup_dir))
-        os.system('cp {}.py {}'.format('network/' + configs['model_params']['model_architecture'], backup_dir))
+        os.system(f'cp main.py {backup_dir}')
+        os.system(f'cp dataloader/dataset.py {backup_dir}')
+        os.system(f'cp dataloader/pc_dataset.py {backup_dir}')
+        os.system(f'cp {configs.config_path} {backup_dir}')
+        os.system(f'cp network/base_model.py {backup_dir}')
+        os.system(f'cp network/baseline.py {backup_dir}')
+        os.system(
+            f"cp {'network/' + configs['model_params']['model_architecture']}.py {backup_dir}"
+        )
 
     # reproducibility
     torch.manual_seed(configs.seed)
@@ -221,9 +226,11 @@ if __name__ == '__main__':
     else:
         print('Start testing...')
         assert num_gpu == 1, 'only support single GPU testing!'
-        trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='ddp',
-                             resume_from_checkpoint=configs.checkpoint,
-                             logger=tb_logger,
-                             profiler=profiler)
+        trainer = pl.Trainer(
+            gpus=list(range(num_gpu)),
+            accelerator='ddp',
+            resume_from_checkpoint=configs.checkpoint,
+            logger=tb_logger,
+            profiler=profiler,
+        )
         trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
