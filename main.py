@@ -161,6 +161,7 @@ if __name__ == '__main__':
     torch.manual_seed(configs.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
+    #torch.set_float32_matmul_precision('medium')
     np.random.seed(configs.seed)
     config_path = configs.config_path
 
