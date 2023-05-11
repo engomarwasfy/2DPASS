@@ -1,31 +1,22 @@
-#!/usr/bin/env python
-# encoding: utf-8
-'''
-@author: Xu Yan
-@file: main.py
-@time: 2021/12/7 22:21
-'''
-
-import os
-import yaml
-import torch
-import datetime
+import argparse
 import importlib
+
+import torch
+import os
+import json
+
 import numpy as np
+import yaml
+from easydict import EasyDict
+
+from dataloader.dataset import get_collate_class, get_model_class
+from dataloader.pc_dataset import get_pc_model_class
 import pytorch_lightning as pl
 
 from easydict import EasyDict
 from argparse import ArgumentParser
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.profilers import SimpleProfiler
-from pytorch_lightning.callbacks import ModelCheckpoint, StochasticWeightAveraging
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from dataloader.dataset import get_model_class, get_collate_class
-from dataloader.pc_dataset import get_pc_model_class
-from pytorch_lightning.callbacks import LearningRateMonitor
-
-import warnings
-warnings.filterwarnings("ignore")
 
 def load_yaml(file_name):
     with open(file_name, 'r') as f:
@@ -37,16 +28,16 @@ def load_yaml(file_name):
 
 
 def parse_config():
-    parser = ArgumentParser()
+    parser = argparse.ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(0,1), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
-    parser.add_argument('--save_top_k', type=int, default=3, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--save_top_k', type=int, default=10, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
     parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
@@ -127,17 +118,14 @@ def build_loader(config):
 
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
 
-def ignore_gpu_warning(message, category, filename, lineno, file=None, line=None):
-    if "your gpu arch" in str(message):
-        return None
-    else:
-        return warnings.defaultaction(message, category, filename, lineno, file, line)
 
 
 if __name__ == '__main__':
+    NUM_MODELS = 3
+    SOUPS_CHECKPOINT_DIR = 'soups/checkpoints'
+    SOUPS_RESULTS_DIR = 'soups/uniform_soup'
+    SOUPS_RESULTS_FILE_NAME = 'soup.ckpt'
     # parameters
-    warnings.filterwarnings("ignore", category=UserWarning, message="your gpu arch")
-    warnings.showwarning = ignore_gpu_warning
     configs = parse_config()
     print(configs)
 
@@ -145,30 +133,10 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
     num_gpu = len(configs.gpu)
 
-    # output path
-    log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
-    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
-    os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
-    profiler = SimpleProfiler(filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
-    np.set_printoptions(precision=4, suppress=True)
-
-    # save the backup files
-    backup_dir = os.path.join(log_folder, configs.log_dir, 'backup_files_%s' % str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')))
-    if not configs['test']:
-        os.makedirs(backup_dir, exist_ok=True)
-        os.system('cp main.py {}'.format(backup_dir))
-        os.system('cp dataloader/dataset.py {}'.format(backup_dir))
-        os.system('cp dataloader/pc_dataset.py {}'.format(backup_dir))
-        os.system('cp {} {}'.format(configs.config_path, backup_dir))
-        os.system('cp network/base_model.py {}'.format(backup_dir))
-        os.system('cp network/baseline.py {}'.format(backup_dir))
-        os.system('cp {}.py {}'.format('network/' + configs['model_params']['model_architecture'], backup_dir))
-
     # reproducibility
     torch.manual_seed(configs.seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
-    #torch.set_float32_matmul_precision('medium')
     np.random.seed(configs.seed)
     config_path = configs.config_path
 
@@ -176,64 +144,80 @@ if __name__ == '__main__':
     model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
     my_model = model_file.get_model(configs)
 
-    pl.seed_everything(configs.seed)
-    checkpoint_callback = ModelCheckpoint(
-        monitor=configs.monitor,
-        mode='max',
-        save_last=True,
-        save_top_k=configs.save_top_k,
-        dirpath="default")
 
-    if configs.checkpoint is not None:
-        print('load pre-trained model...')
-        if configs.fine_tune or configs.test or configs.pretrain2d:
-            my_model = my_model.load_from_checkpoint(configs.checkpoint, config=configs, strict=(not configs.pretrain2d))
+
+        # create the uniform soup sequentially to not overload memory
+    soups =os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
+    soup_result_file = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + SOUPS_RESULTS_FILE_NAME
+    listOfFiles=os.listdir(soups)
+    baseDir =soups+ '/'
+    j=0
+    lastCheckpointPath = 'epoch=62-step=150633.ckpt'
+    lastCheckpointPathFull = baseDir + lastCheckpointPath
+    uniform_soup = 'uniform_soup'
+    lastCheckpoint= None
+    for model_path in listOfFiles:
+        print(f'Adding model {j} of {NUM_MODELS - 1} to uniform soup.')
+        model_path_full = baseDir + model_path
+        assert os.path.exists(model_path_full)
+
+        state = torch.load(model_path_full)
+        state_dict = state.get('state_dict')
+        if j == 0:
+            uniform_soup = {k : v * (1./NUM_MODELS) for k, v in state_dict.items()}
         else:
-            # continue last training
-            my_model = my_model.load_from_checkpoint(configs.checkpoint)
+            uniform_soup = {k : v * (1./NUM_MODELS) + uniform_soup[k] for k, v in state_dict.items()}
+        j+=1
+        if model_path == lastCheckpointPath:
+            lastCheckpoint = state
 
-    if configs.SWA:
-        swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start, annealing_epochs=1)]
-    else:
-        swa = []
 
-    if not configs.test:
-        # init trainer
-        print('Start training...')
-        trainer = pl.Trainer(accelerator='cuda',
-                             devices=[0,1],
-                             max_epochs=configs['train_params']['max_num_epochs'],
-                             #resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
-                             callbacks=[checkpoint_callback,
-                                        LearningRateMonitor(logging_interval='step'),
-                                        EarlyStopping(monitor=configs.monitor,
-                                                      patience=configs.stop_patience,
-                                                      mode='max',
-                                                      verbose=True),
-                                        ] + swa,
-                             logger=tb_logger,
-                             profiler=profiler,
-                             check_val_every_n_epoch=configs.check_val_every_n_epoch,
-                             gradient_clip_val=1,
-                             accumulate_grad_batches=1,
-                            #log_every_n_steps = 10 ,
-                            enable_checkpointing = True,
-                            #val_check_interval = 0.5,
-                            #limit_val_batches = 0.001,
-                            #limit_train_batches = 0.001,
-                            #benchmark = True,
-                            # precision=configs['hyper_parameters']['precision'],
-                            #num_sapnity_val_steps = 2 ,
-                            #detect_anomaly=True
-                             )
-        trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
+    lastCheckpoint['state_dict']=uniform_soup
+    torch.save(lastCheckpoint, soup_result_file)
+    results = {'model_name' : f'uniform_soup'}
+    log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
+    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
+    os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
+    profiler = SimpleProfiler(filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
+    print('Start testing...')
+    assert num_gpu == 1, 'only support single GPU testing!'
+    my_model = my_model.load_from_checkpoint(lastCheckpointPathFull,config=configs, strict=(not configs.pretrain2d))
+    trainer = pl.Trainer(accelerator='gpu',
+                         #resume_from_checkpoint=soup_result_file,
+                         logger=tb_logger,
+                         profiler=profiler)
+    trainer.test(my_model,val_dataset_loader)
 
-    else:
-        print('Start testing...')
-        assert num_gpu == 1, 'only support single GPU testing!'
-        trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='ddp',
-                             resume_from_checkpoint=configs.checkpoint,
-                             logger=tb_logger,
-                             profiler=profiler)
-        trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
+
+
+'''
+        # Now, iterate through all models and consider adding them to the greedy soup.
+        for model_path in listOfFiles:
+
+            # Get the potential greedy soup, which consists of the greedy soup with the new model added.
+            new_ingredient_params = torch.load(os.path.join(args.model_location, f'{sorted_models[i]}.pt'))
+            num_ingredients = len(greedy_soup_ingredients)
+            potential_greedy_soup_params = {
+                k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) + 
+                    new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
+                for k in new_ingredient_params
+            }
+
+            # Run the potential greedy soup on the held-out val set.
+            model = get_model_from_sd(potential_greedy_soup_params, my_model)
+            x=model.eval()
+            # If accuracy on the held-out val set increases, add the new model to the greedy soup.
+            if x > best_val_acc_so_far:
+                greedy_soup_ingredients.append(sorted_models[i])
+                best_val_acc_so_far = x
+                greedy_soup_params = potential_greedy_soup_params
+                print(f'Adding to soup. New soup is {greedy_soup_ingredients}')
+
+        # Finally, evaluate the greedy soup.
+        model = get_model_from_sd(greedy_soup_params, my_model)
+        results = {'model_name' : f'greedy_soup'}
+        model.eval()
+
+        with open(GREEDY_SOUP_RESULTS_FILE, 'a+') as f:
+            f.write(json.dumps(results) + '\n')
+'''
