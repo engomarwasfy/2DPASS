@@ -46,7 +46,7 @@ def parse_config():
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
-    parser.add_argument('--save_top_k', type=int, default=3, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--save_top_k', type=int, default=100, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
     parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
     os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
-    profiler = SimpleProfiler(filename=f'{log_folder}/{configs.log_dir}/profiler.txt')
+    profiler = SimpleProfiler(filename='profiler.txt')
     np.set_printoptions(precision=4, suppress=True)
 
     # save the backup files
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         mode='max',
         save_last=True,
         save_top_k=configs.save_top_k,
-        dirpath="default")
+        dirpath="default2")
 
     if configs.checkpoint is not None:
         print('load pre-trained model...')
@@ -215,10 +215,10 @@ if __name__ == '__main__':
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
-                             accumulate_grad_batches=1,
+                             accumulate_grad_batches=2,
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
-                            #val_check_interval = 0.5,
+                            val_check_interval = 0.5,
                             #limit_val_batches = 0.001,
                             #limit_train_batches = 0.001,
                             #benchmark = True,
