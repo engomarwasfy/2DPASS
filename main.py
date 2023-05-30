@@ -56,7 +56,7 @@ def parse_config():
     parser.add_argument('--pretrain2d', action='store_true', default=False, help='use pre-trained 2d network')
     parser.add_argument('--num_vote', type=int, default=1, help='number of voting in the test')
     parser.add_argument('--submit_to_server', action='store_true', default=False, help='submit on benchmark')
-    parser.add_argument('--checkpoint', type=str, default=None, help='load checkpoint')
+    parser.add_argument('--checkpoint', type=str, default= None, help='load checkpoint')
     # debug
     parser.add_argument('--debug', default=False, action='store_true')
 
@@ -73,7 +73,8 @@ def parse_config():
     if args.debug:
         config['dataset_params']['val_data_loader']['batch_size'] = 2
         config['dataset_params']['val_data_loader']['num_workers'] = 0
-
+    config['dataset_params']['val_data_loader']['rotate_aug'] = True
+    config['dataset_params']['val_data_loader']['transform_aug'] = True
     return EasyDict(config)
 
 
@@ -98,7 +99,7 @@ def build_loader(config):
         )
         # config['dataset_params']['training_size'] = len(train_dataset_loader) * len(configs.gpu)
         val_dataset_loader = torch.utils.data.DataLoader(
-            dataset=dataset_type(val_pt_dataset, config, val_config, num_vote=1),
+            dataset=dataset_type(val_pt_dataset, config, val_config, num_vote=12),
             batch_size=val_config["batch_size"],
             collate_fn=get_collate_class(config['dataset_params']['collate_type']),
             shuffle=val_config["shuffle"],
@@ -182,7 +183,7 @@ if __name__ == '__main__':
         mode='max',
         save_last=True,
         save_top_k=configs.save_top_k,
-        dirpath="default2")
+        dirpath="default")
 
     if configs.checkpoint is not None:
         print('load pre-trained model...')
@@ -202,6 +203,7 @@ if __name__ == '__main__':
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
                              devices=[0,1],
+                             strategy= 'ddp',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              #resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
                              callbacks=[checkpoint_callback,
@@ -215,7 +217,7 @@ if __name__ == '__main__':
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
-                             accumulate_grad_batches=2,
+                             accumulate_grad_batches=1,
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
                             val_check_interval = 0.5,
