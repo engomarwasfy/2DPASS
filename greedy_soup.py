@@ -1,9 +1,11 @@
 import argparse
+import copy
 import importlib
 
+import cv2
 import torch
 import os
-
+import copy
 import numpy as np
 import yaml
 from checkpointSort import check_points_sort
@@ -14,6 +16,9 @@ import pytorch_lightning as pl
 from easydict import EasyDict
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.profilers import SimpleProfiler
+from segment_anything import *
+from segment_anything.modeling import ImageEncoderViT
+
 
 def load_yaml(file_name):
     with open(file_name, 'r') as f:
@@ -116,6 +121,17 @@ def build_loader(config):
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
 
 if __name__ == '__main__':
+        '''
+        sam_checkpoint = "sam_vit_h_4b8939.pth"
+        model_type = "vit_h"
+        device = "cuda"
+        sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+        sam.to(device=device)
+        mask_generator = SamAutomaticMaskGenerator(sam)
+        image = cv2.imread("000000.png")
+        masks = mask_generator.generate(image)
+        print(masks)
+        '''
         SOUPS_CHECKPOINT_DIR = 'default'
         SOUPS_RESULTS_DIR = 'soups/uniform_soup'
         configs = parse_config()
@@ -142,9 +158,12 @@ if __name__ == '__main__':
         os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
         profiler = SimpleProfiler(filename='profiler.txt')
 
+
         num_ingredients = 1
         best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'])
-        greedy_soup_params = best_checkpoint['state_dict']
+
+        greedy_soup = copy.deepcopy(best_checkpoint)
+        greedy_soup_params =copy.deepcopy(best_checkpoint['state_dict'])
         greedy_soup_ingredients = [greedy_soup_params]
         trainer = pl.Trainer(accelerator='gpu',
                              logger=tb_logger,
@@ -158,24 +177,23 @@ if __name__ == '__main__':
             if i == 0:
                 continue
             new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
-            num_ingredients = num_ingredients + 1
+            num_ingredients = len(greedy_soup_ingredients)
             potential_greedy_soup_params = {
                 k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) + 
                     new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
                 for k in new_ingredient_params
             }
-            torch.save(best_checkpoint, greedy_soup_temp_checkpoint_path)
+            greedy_soup['state_dict'] = potential_greedy_soup_params
+            torch.save(greedy_soup, greedy_soup_temp_checkpoint_path)
+            greedy_soup['state_dict'] = greedy_soup_params
             my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
                                                      strict=(not configs.pretrain2d))
             results = trainer.test(my_model, val_dataset_loader)
             miou = results[0]['val/mIoU']
             if miou >= best_miou_so_far :
-                best_checkpoint['state_dict'] = potential_greedy_soup_params
+                greedy_soup['state_dict'] = potential_greedy_soup_params
                 print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
-                torch.save(best_checkpoint, greedy_soup_checkpoint_path)
+                torch.save(greedy_soup, greedy_soup_checkpoint_path)
                 greedy_soup_ingredients.append(new_ingredient_params)
                 best_miou_so_far = miou
                 greedy_soup_params = potential_greedy_soup_params
-            else:
-                num_ingredients = num_ingredients - 1
-                print ('not saving checkpoint at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)

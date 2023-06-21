@@ -21,6 +21,7 @@ model_params:
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: False
+  checkpoint: "./default3/last.ckpt"
 
 ###################
 ## Dataset options
@@ -75,10 +76,10 @@ dataset_params:
     - 1168181
 
   train_data_loader:
-    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    data_path: "/media/wasfy/data/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     batch_size: 4
     shuffle: True
-    num_workers: 32
+    num_workers: 1
     rotate_aug: True
     flip_aug: True
     scale_aug: True
@@ -86,9 +87,9 @@ dataset_params:
     dropout_aug: True
 
   val_data_loader:
-    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    data_path: "/media/wasfy/data/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
-    num_workers: 32
+    num_workers: 1
 
     # normal test
     batch_size: 4

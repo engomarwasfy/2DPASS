@@ -6,7 +6,7 @@ import os
 
 def check_points_sort():
     # Define the directory where your checkpoints are saved
-    checkpoint_dir = 'default'
+    checkpoint_dir = 'batchSize=8_2'
     # Get a list of all checkpoint files in the directory
     checkpoint_files = glob.glob(os.path.join(checkpoint_dir, '*.ckpt'))
     # Instantiate the ModelCheckpoint callback

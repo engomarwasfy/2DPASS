@@ -27,7 +27,7 @@ def fast_hist_crop(output, target, unique_label):
 
 class IoU(Metric):
     def __init__(self, dataset_config, dist_sync_on_step=False, compute_on_step=True):
-        super().__init__(dist_sync_on_step=dist_sync_on_step, compute_on_step=compute_on_step)
+        super().__init__(dist_sync_on_step=True, compute_on_step=True)
         self.hist_list = []
         self.best_miou = 0
         self.SemKITTI_label_name = get_SemKITTI_label_name(dataset_config["label_mapping"])
