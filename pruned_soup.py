@@ -158,20 +158,23 @@ if __name__ == '__main__':
         profiler = SimpleProfiler(filename='profiler.txt')
 
 
-        num_ingredients = 1
         best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'])
         trained_checkpoint_full = copy.deepcopy(best_checkpoint)
         greedy_soup_params = best_checkpoint['state_dict']
-        greedy_soup_ingredients = [greedy_soup_params]
         trainer = pl.Trainer(accelerator='gpu',
                              logger=tb_logger,
                              profiler=profiler)
-        N= len(sorted_dict['checkpoints'])
+        checkpointList = copy.deepcopy((sorted_dict['checkpoints']))[0:5]
+        checkpointListReversed = list(copy.deepcopy((reversed(checkpointList))))[0:5]
+        print(checkpointListReversed[0]['miou'])
+        print(len(checkpointList))
+        num_ingredients = len(checkpointList)
+        N = num_ingredients
         weight_list = [1/N for i in range(N)]
         trained_checkpoint = {
             k:trained_checkpoint_full['state_dict'][k].clone() * weight_list[0]
                               for k in trained_checkpoint_full['state_dict']}
-        for i, checkpoint in enumerate(sorted_dict['checkpoints']):
+        for i, checkpoint in enumerate(checkpointList):
             new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
             if i == 0:
                 continue
@@ -181,39 +184,40 @@ if __name__ == '__main__':
                 for k in trained_checkpoint
             }
         trained_checkpoint_full['state_dict'] = trained_checkpoint
+        greedy_soup_params =  trained_checkpoint_full['state_dict']
         torch.save(trained_checkpoint_full, greedy_soup_temp_checkpoint_path)
         my_model1 = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
                                                  strict=(not configs.pretrain2d))
         results1 = trainer.test(my_model1, val_dataset_loader)
         best_miou_so_far = results1[0]['val/mIoU']
-        num_ingredients = N
-        for i, checkpoint in enumerate(reversed(sorted_dict['checkpoints'])):
-            print("iteration number ", i, " out of ", len(sorted_dict['checkpoints']))
-            new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
-            if(num_ingredients == 1):
-                break
-            potential_greedy_soup_params = {
-                k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) -
-                    new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
-                for k in new_ingredient_params
-            }
-            num_ingredients = num_ingredients - 1
-            trained_checkpoint_full['state_dict'] = potential_greedy_soup_params
-            torch.save(trained_checkpoint_full, greedy_soup_temp_checkpoint_path)
-            trained_checkpoint_full['state_dict'] = greedy_soup_params
-            my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
-                                                     strict=(not configs.pretrain2d))
-            results = trainer.test(my_model, val_dataset_loader)
-            miou = results[0]['val/mIoU']
-            if miou >= best_miou_so_far :
+
+        for epoch in range(0, N):
+            print("epoch number ", epoch, " out of ", N)
+            for i, checkpoint in enumerate(checkpointList):
+                print("iteration number ", i, " out of ", len(checkpointList))
+                new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
+                if(num_ingredients == 1):
+                    break
+                potential_greedy_soup_params = {
+                    k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients - 1.)) -
+                        new_ingredient_params[k].clone() * (1. / (num_ingredients - 1))
+                    for k in new_ingredient_params
+                }
                 trained_checkpoint_full['state_dict'] = potential_greedy_soup_params
-                print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
-                torch.save(trained_checkpoint_full, greedy_soup_checkpoint_path)
-                greedy_soup_ingredients.append(new_ingredient_params)
-                best_miou_so_far = miou
-                greedy_soup_params = potential_greedy_soup_params
-            else:
+                torch.save(trained_checkpoint_full, greedy_soup_temp_checkpoint_path)
                 trained_checkpoint_full['state_dict'] = greedy_soup_params
-                torch.save(trained_checkpoint_full, greedy_soup_checkpoint_path)
-                num_ingredients = num_ingredients + 1
-                print ('not saving checkpoint at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
+                my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+                                                     strict=(not configs.pretrain2d))
+                results = trainer.test(my_model, val_dataset_loader)
+                miou = results[0]['val/mIoU']
+                if miou >= best_miou_so_far :
+                    checkpointList.remove(checkpoint)
+                    trained_checkpoint_full['state_dict'] = potential_greedy_soup_params
+                    print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
+                    num_ingredients = num_ingredients - 1
+                    best_miou_so_far = miou
+                    greedy_soup_params = potential_greedy_soup_params
+                else:
+                    trained_checkpoint_full['state_dict'] = greedy_soup_params
+                    torch.save(trained_checkpoint_full, greedy_soup_checkpoint_path)
+                    print ('not saving checkpoint at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)

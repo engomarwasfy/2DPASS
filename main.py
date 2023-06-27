@@ -20,6 +20,8 @@ from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.profilers import SimpleProfiler
 from pytorch_lightning.callbacks import ModelCheckpoint, StochasticWeightAveraging
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
+from CustomModelCheckpoint import CustomModelCheckpoint, custom_load_checkpoint
 from dataloader.dataset import get_model_class, get_collate_class
 from dataloader.pc_dataset import get_pc_model_class
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -133,6 +135,9 @@ def ignore_gpu_warning(message, category, filename, lineno, file=None, line=None
         return None
     else:
         return warnings.defaultaction(message, category, filename, lineno, file, line)
+from pytorch_lightning.callbacks import ModelCheckpoint
+
+
 
 
 if __name__ == '__main__':
@@ -178,7 +183,7 @@ if __name__ == '__main__':
     my_model = model_file.get_model(configs)
 
     pl.seed_everything(configs.seed)
-    checkpoint_callback = ModelCheckpoint(
+    checkpoint_callback = CustomModelCheckpoint(
         monitor=configs.monitor,
         mode='max',
         save_last=True,
@@ -187,11 +192,7 @@ if __name__ == '__main__':
 
     #if configs.checkpoint is not None:
     print('load pre-trained model...')
-    if configs.fine_tune or configs.test or configs.pretrain2d:
-        my_model = my_model.load_from_checkpoint('./default3/last.ckpt', config=configs, strict=(not configs.pretrain2d))
-    else:
-            # continue last training
-        my_model = my_model.load_from_checkpoint('./default3/last.ckpt')
+
 
     if configs.SWA:
         swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start, annealing_epochs=1)]
@@ -202,7 +203,7 @@ if __name__ == '__main__':
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[0,1,2],
+                             devices=[2],
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              #resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
@@ -229,6 +230,12 @@ if __name__ == '__main__':
                             #detect_anomaly=True
                             sync_batchnorm=True,
                              )
+        if configs.fine_tune or configs.test or configs.pretrain2d:
+            my_model = my_model.load_from_checkpoint('./default3/last.ckpt', config=configs,
+                                                     strict=(not configs.pretrain2d))
+        else:
+            # continue last training
+            my_model , trainer = custom_load_checkpoint(my_model,trainer ,'./default3/last.ckpt')
         trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
 
     else:
@@ -239,4 +246,10 @@ if __name__ == '__main__':
                              resume_from_checkpoint=configs.checkpoint,
                              logger=tb_logger,
                              profiler=profiler)
+        if configs.fine_tune or configs.test or configs.pretrain2d:
+            my_model = my_model.load_from_checkpoint('./default3/last.ckpt', config=configs,
+                                                     strict=(not configs.pretrain2d))
+        else:
+            # continue last training
+            my_model , trainer = custom_load_checkpoint(my_model,trainer, './default3/last.ckpt')
         trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
