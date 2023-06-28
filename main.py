@@ -154,6 +154,13 @@ if __name__ == '__main__':
     # output path
     log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
+    comet_logger = pl_loggers.CometLogger()
+    #wandb_logger = pl_loggers.WandbLogger()
+    #neptune_logger=pl_loggers.NeptuneLogger()
+
+
+
+
     os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
     profiler = SimpleProfiler(filename='profiler.txt')
     np.set_printoptions(precision=4, suppress=True)
@@ -199,11 +206,22 @@ if __name__ == '__main__':
     else:
         swa = []
 
+    #checkpoint = './default/last.ckpt'
+    checkpoint=None
+    epoch=0
+    if checkpoint is not None:
+        if configs.fine_tune or configs.test or configs.pretrain2d:
+            my_model = my_model.load_from_checkpoint(checkpoint, config=configs,
+                                                     strict=(not configs.pretrain2d))
+        else:
+            # continue last training
+            my_model, epoch = custom_load_checkpoint(my_model, checkpoint)
     if not configs.test:
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[2],
+                             devices=[0,1,2],
+                             #fast_dev_run = True,
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'],
                              #resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
@@ -214,7 +232,7 @@ if __name__ == '__main__':
                                                       mode='max',
                                                       verbose=True),
                                         ] + swa,
-                             logger=tb_logger,
+                             logger=[tb_logger, comet_logger],
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
@@ -222,21 +240,15 @@ if __name__ == '__main__':
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
                             val_check_interval = 0.5,
-                            #limit_val_batches = 0.001,
-                            #limit_train_batches = 0.001,
+                            limit_val_batches = 0.01,
+                            limit_train_batches = 0.01,
                             #benchmark = True,
                             # precision=configs['hyper_parameters']['precision'],
                             #num_sapnity_val_steps = 2 ,
                             #detect_anomaly=True
                             sync_batchnorm=True,
                              )
-        if configs.fine_tune or configs.test or configs.pretrain2d:
-            my_model = my_model.load_from_checkpoint('./default3/last.ckpt', config=configs,
-                                                     strict=(not configs.pretrain2d))
-        else:
-            # continue last training
-            my_model , trainer = custom_load_checkpoint(my_model,trainer ,'./default3/last.ckpt')
-        trainer.fit(my_model, train_dataset_loader, val_dataset_loader)
+        trainer.fit(model=my_model,train_dataloaders =train_dataset_loader,val_dataloaders= val_dataset_loader,ckpt_path=checkpoint)
 
     else:
         print('Start testing...')
@@ -246,10 +258,4 @@ if __name__ == '__main__':
                              resume_from_checkpoint=configs.checkpoint,
                              logger=tb_logger,
                              profiler=profiler)
-        if configs.fine_tune or configs.test or configs.pretrain2d:
-            my_model = my_model.load_from_checkpoint('./default3/last.ckpt', config=configs,
-                                                     strict=(not configs.pretrain2d))
-        else:
-            # continue last training
-            my_model , trainer = custom_load_checkpoint(my_model,trainer, './default3/last.ckpt')
         trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
