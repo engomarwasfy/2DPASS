@@ -8,6 +8,7 @@
 
 import os
 import yaml
+import comet_ml
 import torch
 import datetime
 import importlib
@@ -156,7 +157,9 @@ if __name__ == '__main__':
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
     comet_logger = pl_loggers.CometLogger()
     #wandb_logger = pl_loggers.WandbLogger()
-    #neptune_logger=pl_loggers.NeptuneLogger()
+    neptune_logger=pl_loggers.NeptuneLogger()
+    wandb_logger=pl_loggers.WandbLogger()
+    pl_loggers.MLFlowLogger()
 
 
 
@@ -232,7 +235,7 @@ if __name__ == '__main__':
                                                       mode='max',
                                                       verbose=True),
                                         ] + swa,
-                             logger=[tb_logger, comet_logger],
+                             logger=[tb_logger, comet_logger,neptune_logger,wandb_logger],
                              profiler=profiler,
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
