@@ -5,12 +5,12 @@
 @file: basic_block.py
 @time: 2021/12/16 20:34
 '''
-import torch
 import spconv.pytorch as spconv
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torchvision.models.resnet import resnet34
+
 from utils.lovasz_loss import lovasz_softmax
 
 

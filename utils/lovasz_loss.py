@@ -5,10 +5,11 @@ Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
 
 from __future__ import print_function, division
 
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
 import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
+
 try:
     from itertools import ifilterfalse
 except ImportError:  # py3k

@@ -1,15 +1,15 @@
-import torch
 import numpy as np
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchsparse
 import torchsparse.nn as spnn
-import network.torchsparse_utils.basic_blocks as basic_blocks
-import torch.nn.functional as F
-
-from network.torchsparse_utils.utils import *
 from torchsparse import PointTensor
-from network.torchsparse_utils.base_model import LightningBaseModel
+
+import network.torchsparse_utils.basic_blocks as basic_blocks
 from network.basic_block import Lovasz_loss
+from network.torchsparse_utils.base_model import LightningBaseModel
+from network.torchsparse_utils.utils import *
 
 
 class get_model(LightningBaseModel):

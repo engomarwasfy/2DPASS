@@ -1,7 +1,7 @@
-from pytorch_lightning.callbacks import ModelCheckpoint
-import torch
 import glob
 import os
+
+import torch
 
 
 def check_points_sort():

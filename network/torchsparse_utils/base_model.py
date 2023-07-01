@@ -5,16 +5,17 @@
 @file: base_model.py
 @time: 2021/12/7 22:39
 '''
-import os
-import torch
-import yaml
 import json
+import os
+from datetime import datetime
+
 import numpy as np
 import pytorch_lightning as pl
-
-from datetime import datetime
+import torch
+import yaml
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
 from torchmetrics import Accuracy
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingWarmRestarts, CosineAnnealingLR
+
 from utils.metric_util import IoU
 from utils.schedulers import cosine_schedule_with_warmup
 

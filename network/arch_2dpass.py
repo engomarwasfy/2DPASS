@@ -1,13 +1,14 @@
-import torch
-import torch_scatter
 import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch_scatter
 
-from network.basic_block import Lovasz_loss
-from network.baseline import get_model as SPVCNN
 from network.base_model import LightningBaseModel
+from network.baseline import get_model as SPVCNN
+from network.basic_block import Lovasz_loss
 from network.basic_block import ResNetFCN
+
 
 class xModalKD(nn.Module):
     def __init__(self,config):
@@ -23,18 +24,18 @@ class xModalKD(nn.Module):
         for i in range(self.num_scales):
             self.multihead_3d_classifier.append(
                 nn.Sequential(
-                    nn.Linear(self.hiden_size, 128),
+                    nn.Linear(self.hiden_size, 256),
                     nn.ReLU(True),
-                    nn.Linear(128, self.num_classes))
+                    nn.Linear(256, self.num_classes))
             )
 
         self.multihead_fuse_classifier = nn.ModuleList()
         for i in range(self.num_scales):
             self.multihead_fuse_classifier.append(
                 nn.Sequential(
-                    nn.Linear(self.hiden_size, 128),
+                    nn.Linear(self.hiden_size, 256),
                     nn.ReLU(True),
-                    nn.Linear(128, self.num_classes))
+                    nn.Linear(256, self.num_classes))
             )
         self.leaners = nn.ModuleList()
         self.fcs1 = nn.ModuleList()
@@ -45,9 +46,9 @@ class xModalKD(nn.Module):
             self.fcs2.append(nn.Sequential(nn.Linear(self.hiden_size, self.hiden_size)))
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.hiden_size * self.num_scales, 128),
+            nn.Linear(self.hiden_size * self.num_scales, 256),
             nn.ReLU(True),
-            nn.Linear(128, self.num_classes),
+            nn.Linear(256, self.num_classes),
         )
 
         if 'seg_labelweights' in config['dataset_params']:

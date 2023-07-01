@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
 
+from utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
 
 # all classes
 NUSCENES_COLOR_PALETTE = [

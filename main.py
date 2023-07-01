@@ -6,28 +6,27 @@
 @time: 2021/12/7 22:21
 '''
 
-import os
-import yaml
-import comet_ml
-import torch
 import datetime
 import importlib
+import os
+import warnings
+from argparse import ArgumentParser
+
 import numpy as np
 import pytorch_lightning as pl
-
+import torch
+import yaml
 from easydict import EasyDict
-from argparse import ArgumentParser
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.profilers import SimpleProfiler
-from pytorch_lightning.callbacks import ModelCheckpoint, StochasticWeightAveraging
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import StochasticWeightAveraging
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.profilers import SimpleProfiler
 
-from CustomModelCheckpoint import CustomModelCheckpoint, custom_load_checkpoint
+from CustomModelCheckpoint import CustomModelCheckpoint
 from dataloader.dataset import get_model_class, get_collate_class
 from dataloader.pc_dataset import get_pc_model_class
-from pytorch_lightning.callbacks import LearningRateMonitor
 
-import warnings
 warnings.filterwarnings("ignore")
 
 def load_yaml(file_name):
@@ -48,8 +47,8 @@ def parse_config():
     # training
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
-    parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
-    parser.add_argument('--save_top_k', type=int, default=100, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--stop_patience', type=int, default=5000, help='patience for stop training')
+    parser.add_argument('--save_top_k', type=int, default=1000, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
     parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
@@ -136,7 +135,6 @@ def ignore_gpu_warning(message, category, filename, lineno, file=None, line=None
         return None
     else:
         return warnings.defaultaction(message, category, filename, lineno, file, line)
-from pytorch_lightning.callbacks import ModelCheckpoint
 
 
 
@@ -156,11 +154,8 @@ if __name__ == '__main__':
     log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
     comet_logger = pl_loggers.CometLogger()
-    #wandb_logger = pl_loggers.WandbLogger()
+    wandb_logger = pl_loggers.WandbLogger()
     neptune_logger=pl_loggers.NeptuneLogger()
-    wandb_logger=pl_loggers.WandbLogger()
-    pl_loggers.MLFlowLogger()
-
 
 
 
@@ -209,16 +204,18 @@ if __name__ == '__main__':
     else:
         swa = []
 
-    #checkpoint = './default/last.ckpt'
+    #checkpoint = './default4/last.ckpt'
     checkpoint=None
     epoch=0
+    torch.cuda.empty_cache()
+
     if checkpoint is not None:
         if configs.fine_tune or configs.test or configs.pretrain2d:
             my_model = my_model.load_from_checkpoint(checkpoint, config=configs,
                                                      strict=(not configs.pretrain2d))
         else:
             # continue last training
-            my_model, epoch = custom_load_checkpoint(my_model, checkpoint)
+            my_model = my_model.load_from_checkpoint(checkpoint)
     if not configs.test:
         # init trainer
         print('Start training...')
@@ -226,7 +223,7 @@ if __name__ == '__main__':
                              devices=[0,1,2],
                              #fast_dev_run = True,
                              strategy= 'auto',
-                             max_epochs=configs['train_params']['max_num_epochs'],
+                             max_epochs=configs['train_params']['max_num_epochs'] ,
                              #resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
                              callbacks=[checkpoint_callback,
                                         LearningRateMonitor(logging_interval='step'),
@@ -240,17 +237,19 @@ if __name__ == '__main__':
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
                              accumulate_grad_batches=1,
+                             num_sanity_val_steps=0,
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
-                            val_check_interval = 0.5,
-                            limit_val_batches = 0.01,
-                            limit_train_batches = 0.01,
+                            val_check_interval = 0.1,
+                            #limit_val_batches = 0.01,
+                            #limit_train_batches = 0.01,
                             #benchmark = True,
                             # precision=configs['hyper_parameters']['precision'],
                             #num_sapnity_val_steps = 2 ,
                             #detect_anomaly=True
                             sync_batchnorm=True,
                              )
+        torch.cuda.empty_cache()
         trainer.fit(model=my_model,train_dataloaders =train_dataset_loader,val_dataloaders= val_dataset_loader,ckpt_path=checkpoint)
 
     else:

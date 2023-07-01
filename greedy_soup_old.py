@@ -1,23 +1,19 @@
 import argparse
 import importlib
-
-import torch
 import os
-import json
 
 import numpy as np
+import pytorch_lightning as pl
+import torch
 import yaml
 from easydict import EasyDict
+from pytorch_lightning import loggers as pl_loggers
+from pytorch_lightning.profilers import SimpleProfiler
 
 from checkpointSort import check_points_sort
 from dataloader.dataset import get_collate_class, get_model_class
 from dataloader.pc_dataset import get_pc_model_class
-import pytorch_lightning as pl
 
-from easydict import EasyDict
-from argparse import ArgumentParser
-from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.profilers import SimpleProfiler
 
 def load_yaml(file_name):
     with open(file_name, 'r') as f:

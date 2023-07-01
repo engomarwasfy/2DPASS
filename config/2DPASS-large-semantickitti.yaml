@@ -22,7 +22,7 @@ model_params:
   hiden_size: 256
   num_classes: 20
   backbone_2d: resnet34
-  pretrained2d: False
+  pretrained2d: True
 
 ###################
 ## Dataset options
@@ -77,8 +77,8 @@ dataset_params:
     - 1168181
 
   train_data_loader:
-    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
-    batch_size: 4
+    data_path: "/media/wasfy/data/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    batch_size: 1
     shuffle: True
     num_workers: 8
     rotate_aug: True
@@ -88,12 +88,12 @@ dataset_params:
     dropout_aug: True
 
   val_data_loader:
-    data_path: "/media/wasfy/One Touch/TA/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
+    data_path: "/media/wasfy/data/drive/All/omarwasfy/Master/Thesis/Datasets/dataset/sequences/"
     shuffle: False
     num_workers: 8
 
     # normal test
-    batch_size: 4
+    batch_size: 1
     rotate_aug: False
     flip_aug: False
     scale_aug: False

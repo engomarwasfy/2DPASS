@@ -1,6 +1,6 @@
-from pytorch_lightning.callbacks import ModelCheckpoint
-import pytorch_lightning as pl
 import torch
+from pytorch_lightning.callbacks import ModelCheckpoint
+
 
 class CustomModelCheckpoint(ModelCheckpoint):
     def save_checkpoint(self, trainer, pl_module):

@@ -5,15 +5,15 @@
 @file: baseline.py
 @time: 2021/12/16 22:41
 '''
-import torch
-import torch_scatter
+import numpy as np
 import spconv.pytorch as spconv
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
+import torch_scatter
 
-from network.basic_block import Lovasz_loss
 from network.base_model import LightningBaseModel
+from network.basic_block import Lovasz_loss
 from network.basic_block import SparseBasicBlock
 from network.voxel_fea_generator import voxel_3d_generator, voxelization
 

@@ -5,11 +5,11 @@
 @file: voxel_fea_generator.py
 @time: 2021/8/4 13:36
 '''
-import torch
-import torch_scatter
-import torch.nn as nn
 import numpy as np
 import spconv.pytorch as spconv
+import torch
+import torch.nn as nn
+import torch_scatter
 
 
 class voxelization(nn.Module):

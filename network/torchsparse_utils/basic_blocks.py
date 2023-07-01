@@ -5,10 +5,8 @@
 @file: basic_blocks.py
 @time: 2021/4/14 22:53
 '''
-import torch
 import torch.nn as nn
 import torchsparse.nn as spnn
-import torch_scatter
 
 
 class BasicConvolutionBlock(nn.Module):
