@@ -50,7 +50,7 @@ def parse_config():
     parser.add_argument('--stop_patience', type=int, default=5000, help='patience for stop training')
     parser.add_argument('--save_top_k', type=int, default=1000, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
-    parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
+    parser.add_argument('--SWA', action='store_true', default=True, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
     # testing
     parser.add_argument('--test', action='store_true', default=False, help='test mode')
@@ -200,12 +200,12 @@ if __name__ == '__main__':
 
 
     if configs.SWA:
-        swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start, annealing_epochs=1)]
+        swa = [StochasticWeightAveraging(swa_epoch_start=configs.train_params.swa_epoch_start, annealing_epochs=6,swa_lrs = [0.05])]
     else:
         swa = []
 
-    #checkpoint = './default4/last.ckpt'
-    checkpoint=None
+    checkpoint = './default3/last.ckpt'
+    #checkpoint=None
     epoch=0
     torch.cuda.empty_cache()
 
@@ -240,7 +240,7 @@ if __name__ == '__main__':
                              num_sanity_val_steps=0,
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
-                            val_check_interval = 0.1,
+                            val_check_interval = 0.5,
                             #limit_val_batches = 0.01,
                             #limit_train_batches = 0.01,
                             #benchmark = True,

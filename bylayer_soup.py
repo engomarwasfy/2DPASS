@@ -1,4 +1,31 @@
+###
+# Disclaimer: This is not our central method, we recommend the greedy soup which is found in main.py.
+# This method is described in appendix I and, compared to main.py, this code is much less tested.
+# For instance, we don't know how stable the results are under optimization noise. However, we expect
+# this method to outperform greedy soup. Still, we recommend using greedy soup and not this.
+# As mentioned in the paper, this code is computationally expernsive as it requires loading models in memory.
+# We run this on a node with 490GB RAM and use 1 GPU with 40GB of memory.
+# It also looks like PyTorch released a very helpful utility which we recommend if re-implementing:
+# https://pytorch.org/docs/stable/generated/torch.nn.utils.stateless.functional_call.html?utm_source=twitter&utm_medium=organic_social&utm_campaign=docs&utm_content=functional-api-for-modules
+# When running with lr = 0.05 and epochs = 5 we get 81.38%.
+###
+
 import argparse
+import os
+import torch
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+import torch
+from torch import nn
+
+import pytorch_lightning as pl
+
+import argparse
+import copy
 import importlib
 import os
 
@@ -34,7 +61,8 @@ def parse_config():
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
-    parser.add_argument('--save_top_k', type=int, default=10, help='save top k checkpoints, use -1 to checkpoint every epoch')
+    parser.add_argument('--save_top_k', type=int, default=10,
+                        help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
     parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
@@ -95,7 +123,8 @@ def build_loader(config):
         )
     else:
         if config['submit_to_server']:
-            test_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='test', num_vote=val_config["batch_size"])
+            test_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='test',
+                                         num_vote=val_config["batch_size"])
             test_dataset_loader = torch.utils.data.DataLoader(
                 dataset=dataset_type(test_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
                 batch_size=val_config["batch_size"],
@@ -104,7 +133,8 @@ def build_loader(config):
                 num_workers=val_config["num_workers"]
             )
         else:
-            val_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='val', num_vote=val_config["batch_size"])
+            val_pt_dataset = pc_dataset(config, data_path=val_config['data_path'], imageset='val',
+                                        num_vote=val_config["batch_size"])
             val_dataset_loader = torch.utils.data.DataLoader(
                 dataset=dataset_type(val_pt_dataset, config, val_config, num_vote=val_config["batch_size"]),
                 batch_size=val_config["batch_size"],
@@ -115,82 +145,100 @@ def build_loader(config):
 
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
 
-class AlphaWrapper(torch.nn.Module):
-    def __init__(self, model):
+
+class AlphaWrapper(pl.LightningModule):
+    def __init__(self, model, checkpoints , total_number_of_models):
         super(AlphaWrapper, self).__init__()
-        self.model = model
-        self.alpha = torch.nn.Parameter(torch.tensor(1.))
+        self.my_model = model
+        self.checkpoints = checkpoints
+        self.soup = self.checkpoints[0]
+        self.alpha_raw = nn.Parameter(torch.ones(total_number_of_models))
+        self.beta = nn.Parameter(torch.tensor(1.))
 
-
+    def alpha(self):
+        return nn.functional.softmax(self.alpha_raw, dim=0)
 
     def forward(self, inp):
-        out = self.model(inp)
-        return self.alpha * out
-
-
-
-if __name__ == '__main__':
-        SOUPS_CHECKPOINT_DIR = 'batchSize=8_2'
-        SOUPS_RESULTS_DIR = 'soups/uniform_soup'
-        configs = parse_config()
-        print(configs)
-        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
-        num_gpu = len(configs.gpu)
-        torch.manual_seed(configs.seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = True
-        np.random.seed(configs.seed)
-        config_path = configs.config_path
-        train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
-        model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
-        my_model = model_file.get_model(configs)
-        soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
-        greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
-        greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
-
-        sorted_dict = check_points_sort()
-        best_checkpoint = None
-        results = {'model_name': f'uniform_soup'}
-        log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
-        tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
-        os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
-        profiler = SimpleProfiler(filename='profiler.txt')
-        best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cpu')
-        checkpoints_dicts= [best_checkpoint['state_dict']]
-        accuracy_list = [sorted_dict['checkpoints'][0]['miou']]
-        trainer = pl.Trainer(accelerator='gpu',
-                             logger=tb_logger,
-                             profiler=profiler)
-
-        for i, checkpoint in enumerate(sorted_dict['checkpoints']):
-            print("iteration number ", i, " out of ", len(sorted_dict['checkpoints']))
+        alph = self.alpha()
+        # generate the model
+        for i, checkpoint in enumerate(self.checkpoints['checkpoints']):
+            print("iteration number ", i, " out of ", len(self.checkpoints['checkpoints']))
             if i == 0:
                 continue
-            new_params = torch.load(checkpoint['path'], map_location= 'cpu' )['state_dict']
+            new_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
             checkpoints_dicts.append(new_params)
-            accuracy_list.append(checkpoint['miou'])
-        weight_list = accuracy_list / np.sum(accuracy_list)
-        trained_checkpoint={
-            k: best_checkpoint['state_dict'][k].clone() * weight_list[0]
+
+        trained_checkpoint = {
+            k: best_checkpoint['state_dict'][k].clone() * self.alpha_raw[0]
             for k in best_checkpoint['state_dict']
         }
         torch.cuda.empty_cache()
         for i, checkpoint in enumerate(sorted_dict['checkpoints']):
-            new_ingredient_params = torch.load(checkpoint['path'],map_location='cpu')['state_dict']
+            new_ingredient_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
             if (i == 0):
                 continue
             trained_checkpoint = {
-                k : trained_checkpoint[k].clone() +
-                    new_ingredient_params[k].clone() * weight_list[i]
+                k: trained_checkpoint[k].clone() +
+                   new_ingredient_params[k].clone() * self.alpha_raw[i]
                 for k in new_ingredient_params
             }
-        best_checkpoint['state_dict'] = trained_checkpoint
+        self.soup['state_dict'] = trained_checkpoint
         torch.save(best_checkpoint, greedy_soup_temp_checkpoint_path)
-        my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+        my_model = self.my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
                                                  strict=(not configs.pretrain2d))
-        results = trainer.test(my_model, val_dataset_loader)
-        for epoch in range(1, configs['training_params']['num_epochs'] + 1):
+        out = self.model(inp)
+        return self.beta * out
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
+        return optimizer
+
+    def training_step(self, input, groundTruth):
+        output = self.forward(input)
+        loss = nn.CrossEntropyLoss()(output, groundTruth)
+        return loss
+
+    def validation_step(self, input):
+        pass
 
 
-        miou = results[0]['val/mIoU']
-        print("miou is ", miou)
+if __name__ == '__main__':
+    SOUPS_CHECKPOINT_DIR = 'batchSize=8_2'
+    SOUPS_RESULTS_DIR = 'soups/uniform_soup'
+    configs = parse_config()
+    print(configs)
+    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
+    num_gpu = len(configs.gpu)
+    torch.manual_seed(configs.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+    np.random.seed(configs.seed)
+    config_path = configs.config_path
+    train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
+    model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
+    my_model = model_file.get_model(configs)
+    soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
+    greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
+    greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
+
+    sorted_dict = check_points_sort()
+    best_checkpoint = None
+    results = {'model_name': f'uniform_soup'}
+    log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
+    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
+    os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
+    profiler = SimpleProfiler(filename='profiler.txt')
+    best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cpu')
+    checkpoints_dicts = [best_checkpoint['state_dict']]
+    accuracy_list = [sorted_dict['checkpoints'][0]['miou']]
+    alpha_model = AlphaWrapper(my_model, sorted_dict, len(sorted_dict['checkpoints']))
+
+    trainer = pl.Trainer(accelerator='gpu',
+                         logger=tb_logger,
+                         profiler=profiler)
+
+
+
+    results = trainer.train(alpha_model, val_dataset_loader)
+
+

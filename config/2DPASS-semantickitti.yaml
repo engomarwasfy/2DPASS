@@ -21,7 +21,7 @@ model_params:
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: True
-  checkpoint: './default/last.ckpt'
+  checkpoint: './default3/last.ckpt'
 ###################
 ## Dataset options
 dataset_params:
@@ -102,7 +102,7 @@ dataset_params:
 ###################
 ## Train params
 train_params:
-  max_num_epochs: 64
+  max_num_epochs: 96
   learning_rate: 0.24
   optimizer: SGD  # [SGD, Adam]
   lr_scheduler: CosineAnnealingWarmRestarts  # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
@@ -112,3 +112,4 @@ train_params:
 
   lambda_seg2d: 1
   lambda_xm: 0.05
+  swa_epoch_start: 65

@@ -128,7 +128,7 @@ if __name__ == '__main__':
         masks = mask_generator.generate(image)
         print(masks)
         '''
-        SOUPS_CHECKPOINT_DIR = 'default'
+        SOUPS_CHECKPOINT_DIR = 'default3'
         SOUPS_RESULTS_DIR = 'soups/uniform_soup'
         configs = parse_config()
         print(configs)
@@ -164,30 +164,31 @@ if __name__ == '__main__':
         trainer = pl.Trainer(accelerator='gpu',
                              logger=tb_logger,
                              profiler=profiler)
-        my_model = my_model.load_from_checkpoint(sorted_dict['checkpoints'][1]['path'], config=configs,
+        my_model = my_model.load_from_checkpoint(sorted_dict['checkpoints'][0]['path'], config=configs,
                                                  strict=(not configs.pretrain2d))
         results = trainer.test(my_model, val_dataset_loader)
         best_miou_so_far = results[0]['val/mIoU']
         checkpointList =(sorted_dict['checkpoints'])
         print(len(checkpointList))
         N= len(checkpointList)
+        validateAtFirstEpoch = False
+        num_ingredients=14
         for epoch in range(0, N):
             print("epoch number ", epoch, " out of ", N)
             added_models = 0
             for i, checkpoint in enumerate(checkpointList):
+                if(epoch==0 and i==0):
+                    continue
                 print("iteration number ", i, " out of ", len(checkpointList))
                 new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
-                num_ingredients = len(greedy_soup_ingredients)
+                num_ingredients = max(num_ingredients,len(greedy_soup_ingredients))
                 print("num ingredients is ", num_ingredients)
-                '''
-                if (epoch == 0):
-
+                if (epoch == 0 and validateAtFirstEpoch):
                     normal_checkpoint_model = my_model.load_from_checkpoint(checkpoint['path'], config=configs,
                                                          strict=(not configs.pretrain2d))
                     results_model = trainer.test(normal_checkpoint_model, val_dataset_loader)
                     miou_model = results_model[0]['val/mIoU']
                     print("added model miou is ", miou_model)
-                '''
                 potential_greedy_soup_params = {
                     k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) +
                         new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
@@ -204,10 +205,11 @@ if __name__ == '__main__':
                 if miou >= best_miou_so_far :
                     added_models = added_models + 1
                     greedy_soup['state_dict'] = potential_greedy_soup_params
+                    greedy_soup_ingredients.append(new_ingredient_params)
                     print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
                     torch.save(greedy_soup, greedy_soup_checkpoint_path)
                     best_miou_so_far = miou
                     greedy_soup_params = potential_greedy_soup_params
-                    greedy_soup_ingredients.append(new_ingredient_params)
+                    num_ingredients = num_ingredients + 1
             if (added_models ==0):
                 break
