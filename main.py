@@ -5,7 +5,9 @@
 @file: main.py
 @time: 2021/12/7 22:21
 '''
-
+# 0 --> 4070
+# 1 --> 3080 Ti
+# 2 --> 3060
 import datetime
 import importlib
 import os
@@ -41,7 +43,7 @@ def load_yaml(file_name):
 def parse_config():
     parser = ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(0,1,2), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(0,1), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
@@ -50,7 +52,7 @@ def parse_config():
     parser.add_argument('--stop_patience', type=int, default=5000, help='patience for stop training')
     parser.add_argument('--save_top_k', type=int, default=1000, help='save top k checkpoints, use -1 to checkpoint every epoch')
     parser.add_argument('--check_val_every_n_epoch', type=int, default=1, help='check_val_every_n_epoch')
-    parser.add_argument('--SWA', action='store_true', default=True, help='StochasticWeightAveraging')
+    parser.add_argument('--SWA', action='store_true', default=False, help='StochasticWeightAveraging')
     parser.add_argument('--baseline_only', action='store_true', default=False, help='training without 2D')
     # testing
     parser.add_argument('--test', action='store_true', default=False, help='test mode')
@@ -204,9 +206,9 @@ if __name__ == '__main__':
     else:
         swa = []
 
-    checkpoint = './default3/last.ckpt'
-    #checkpoint=None
-    epoch=0
+    #checkpoint = 'soups/best_model.ckpt'
+    checkpoint = 'default/last.ckpt'
+    epoch=64
     torch.cuda.empty_cache()
 
     if checkpoint is not None:
@@ -220,7 +222,7 @@ if __name__ == '__main__':
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[0,1,2],
+                             devices=[0,1],
                              #fast_dev_run = True,
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'] ,
@@ -237,10 +239,13 @@ if __name__ == '__main__':
                              check_val_every_n_epoch=configs.check_val_every_n_epoch,
                              gradient_clip_val=1,
                              accumulate_grad_batches=1,
-                             num_sanity_val_steps=0,
+                             num_sanity_val_steps=2,
                             #log_every_n_steps = 10 ,
                             enable_checkpointing = True,
-                            val_check_interval = 0.5,
+                            val_check_interval = 0.25
+
+
+                             ,
                             #limit_val_batches = 0.01,
                             #limit_train_batches = 0.01,
                             #benchmark = True,

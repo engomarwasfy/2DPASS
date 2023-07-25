@@ -9,26 +9,21 @@
 # https://pytorch.org/docs/stable/generated/torch.nn.utils.stateless.functional_call.html?utm_source=twitter&utm_medium=organic_social&utm_campaign=docs&utm_content=functional-api-for-modules
 # When running with lr = 0.05 and epochs = 5 we get 81.38%.
 ###
-
 import argparse
 import os
 import torch
 import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
 import torch
+from pytorch_lightning.callbacks import LearningRateMonitor, EarlyStopping
 from torch import nn
-
 import pytorch_lightning as pl
-
 import argparse
 import copy
 import importlib
 import os
-
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -36,10 +31,13 @@ import yaml
 from easydict import EasyDict
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.profilers import SimpleProfiler
-
+from torch.optim.lr_scheduler import CosineAnnealingLR, ReduceLROnPlateau, StepLR
+from torchmetrics import Accuracy
 from checkpointSort import check_points_sort
 from dataloader.dataset import get_collate_class, get_model_class
 from dataloader.pc_dataset import get_pc_model_class
+from utils.metric_util import IoU
+from utils.schedulers import cosine_schedule_with_warmup
 
 
 def load_yaml(file_name):
@@ -49,8 +47,6 @@ def load_yaml(file_name):
         except:
             config = yaml.load(f)
     return config
-
-
 def parse_config():
     parser = argparse.ArgumentParser()
     # general
@@ -75,11 +71,9 @@ def parse_config():
     parser.add_argument('--checkpoint', type=str, default=None, help='load checkpoint')
     # debug
     parser.add_argument('--debug', default=False, action='store_true')
-
     args = parser.parse_args()
     config = load_yaml(args.config_path)
     config.update(vars(args))  # override the configuration using the value in args
-
     # voting test
     if args.test:
         config['dataset_params']['val_data_loader']['batch_size'] = args.num_vote
@@ -89,10 +83,7 @@ def parse_config():
     if args.debug:
         config['dataset_params']['val_data_loader']['batch_size'] = 2
         config['dataset_params']['val_data_loader']['num_workers'] = 0
-
     return EasyDict(config)
-
-
 def build_loader(config):
     pc_dataset = get_pc_model_class(config['dataset_params']['pc_dataset_type'])
     dataset_type = get_model_class(config['dataset_params']['dataset_type'])
@@ -142,68 +133,169 @@ def build_loader(config):
                 shuffle=val_config["shuffle"],
                 num_workers=val_config["num_workers"]
             )
-
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
-
-
 class AlphaWrapper(pl.LightningModule):
-    def __init__(self, model, checkpoints , total_number_of_models):
+    def __init__(self, model, checkpoints , total_number_of_models,configs):
         super(AlphaWrapper, self).__init__()
         self.my_model = model
         self.checkpoints = checkpoints
-        self.soup = self.checkpoints[0]
-        self.alpha_raw = nn.Parameter(torch.ones(total_number_of_models))
-        self.beta = nn.Parameter(torch.tensor(1.))
-
+        self.soup = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cuda')
+        self.alpha_raw = nn.Parameter(torch.ones(total_number_of_models), requires_grad=True)
+        self.beta = nn.Parameter(torch.tensor(1.), requires_grad=True)
+        self.train_acc = Accuracy(task="multiclass", num_classes=20)
+        self.val_acc = Accuracy(task="multiclass", num_classes=20, compute_on_step=False)
+        self.val_iou = IoU(configs['dataset_params'], compute_on_step=False)
+        self.num_classes = 20
+        self.ignore_label = 0
+        self.configs= configs
     def alpha(self):
         return nn.functional.softmax(self.alpha_raw, dim=0)
-
     def forward(self, inp):
         alph = self.alpha()
+        alphacpu = alph.to('cpu')
         # generate the model
-        for i, checkpoint in enumerate(self.checkpoints['checkpoints']):
-            print("iteration number ", i, " out of ", len(self.checkpoints['checkpoints']))
-            if i == 0:
-                continue
-            new_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
-            checkpoints_dicts.append(new_params)
-
+        best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cpu')
         trained_checkpoint = {
-            k: best_checkpoint['state_dict'][k].clone() * self.alpha_raw[0]
-            for k in best_checkpoint['state_dict']
-        }
+                k: best_checkpoint['state_dict'][k].clone() * alphacpu[0]
+                for k in best_checkpoint['state_dict']
+            }
+
+        my_model_x=self.my_model.load_from_checkpoint(sorted_dict['checkpoints'][0]['path'], config=configs,
+                                           strict=(not configs.pretrain2d))
+        my_model_xCuda = my_model_x.cuda()
+        outputs = []
+        outputs.append(my_model_xCuda(inp))
         torch.cuda.empty_cache()
         for i, checkpoint in enumerate(sorted_dict['checkpoints']):
             new_ingredient_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
             if (i == 0):
                 continue
+            if (i==1):
+                break
+            my_model_x = self.my_model.load_from_checkpoint(checkpoint['path'] , config=configs,
+                                                            strict=(not configs.pretrain2d))
+            my_model_xCuda = my_model_x.cuda()
+            outputs.append(my_model_xCuda(inp))
+
             trained_checkpoint = {
                 k: trained_checkpoint[k].clone() +
-                   new_ingredient_params[k].clone() * self.alpha_raw[i]
+                    new_ingredient_params[k].clone() * alphacpu[i]
                 for k in new_ingredient_params
             }
         self.soup['state_dict'] = trained_checkpoint
-        torch.save(best_checkpoint, greedy_soup_temp_checkpoint_path)
-        my_model = self.my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+        torch.save(self.soup, greedy_soup_temp_checkpoint_path)
+        my_model_n = self.my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
                                                  strict=(not configs.pretrain2d))
-        out = self.model(inp)
-        return self.beta * out
+        my_model_m=my_model_n.cuda()
+        out = my_model_m(inp)
+        outputs.append(out)
+        outputs_alpha_beta = []
+        for i in range(len(outputs)):
+            if(i == len(outputs) - 1):
+                outputs_alpha_beta.append({k: self.beta.to(self.my_model.device) * alphacpu.to(self.my_model.device)[i] * v if torch.is_tensor(v) and torch.is_floating_point(v) else v
+                    for k, v in outputs[i].items()})
+        # Multiply numeric tensors with self.beta
+        outputs_alpha_beta.append({k: self.beta.to(self.my_model.device) * v if torch.is_tensor(v) and torch.is_floating_point(v) else v
+                    for k, v in outputs[i].items()})
+
+        return outputs_alpha_beta
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
-        return optimizer
+        alpha_beta_params =  [
+            {"params": self.alpha_raw},
+            {"params": self.beta}
+        ]
+        optimizer = torch.optim.SGD(alpha_beta_params,
+                                        lr=self.configs['train_params']["learning_rate"],
+                                        momentum=self.configs['train_params']["momentum"],
+                                        weight_decay=self.configs['train_params']["weight_decay"],
+                                        nesterov=self.configs['train_params']["nesterov"])
+        from functools import partial
+        lr_scheduler = torch.optim.lr_scheduler.LambdaLR(
+        optimizer, lr_lambda=partial(
+                    cosine_schedule_with_warmup,
+                    num_epochs=self.configs['train_params']['max_num_epochs'],
+                    batch_size=self.configs['dataset_params']['train_data_loader']['batch_size'],
+                    dataset_size=self.configs['dataset_params']['training_size'],
+                    num_gpu=len(self.configs.gpu)
+                ))
 
-    def training_step(self, input, groundTruth):
-        output = self.forward(input)
-        loss = nn.CrossEntropyLoss()(output, groundTruth)
-        return loss
+        scheduler = {
+            'scheduler': lr_scheduler,
+            'interval': 'step' ,
+            'frequency': 1
+         }
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': scheduler,
+            'monitor': self.configs.monitor,
+            }
+    def training_step(self, input, batch_idx):
+        print(self.alpha_raw)
+        outputs = self.forward(input)
+        #print(self.alpha_raw)
+        #print(list(self.parameters()))
+        self.log('train/acc', self.train_acc, on_epoch=True)
+        #self.log('train/loss_main_ce', outputs['loss_main_ce'])
+        #self.log('train/loss_main_lovasz', outputs['loss_main_lovasz'])
 
-    def validation_step(self, input):
-        pass
-
-
+        #output avg loss of all models
+        individual_losses = [output['loss'] for output in outputs]
+        total_loss = sum(individual_losses)
+        return total_loss
+    def validation_step(self, data_dict , batch_idx):
+        indices = data_dict['indices']
+        raw_labels = data_dict['raw_labels'].squeeze(1).cpu()
+        origin_len = data_dict['origin_len']
+        vote_logits = torch.zeros((len(raw_labels), self.num_classes))
+        my_model_n = self.my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+                                                        strict=(not configs.pretrain2d))
+        my_model_m=my_model_n.cuda()
+        data_dict = my_model_m(data_dict)
+        vote_logits = data_dict['logits'].cpu()
+        raw_labels = data_dict['labels'].squeeze(0).cpu()
+        prediction = vote_logits.argmax(1)
+        if self.ignore_label != 0:
+            prediction = prediction[raw_labels != self.ignore_label]
+            raw_labels = raw_labels[raw_labels != self.ignore_label]
+            prediction += 1
+            raw_labels += 1
+        self.val_acc(prediction, raw_labels)
+        self.log('val/acc', self.val_acc, on_epoch=True)
+        self.val_iou(
+            prediction.cpu().detach().numpy(),
+            raw_labels.cpu().detach().numpy(),
+        )
+        return data_dict['loss']
+    def on_validation_epoch_end(self):
+        iou, best_miou = self.val_iou.compute()
+        mIoU = np.nanmean(iou)
+        str_print = ''
+        self.log('val/mIoU', mIoU, on_epoch=True)
+        self.log('val/best_miou', best_miou, on_epoch=True)
+        str_print += 'Validation per class iou: '
+        for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
+            str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
+        str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
+        self.print(str_print)
+        self.val_iou.hist_list = []
+        def on_after_backward(self) -> None:
+            """
+            Skipping updates in case of unstable gradients
+            https://github.com/Lightning-AI/lightning/issues/4956
+            """
+            print("hello world")
+            valid_gradients = True
+            for name, param in self.named_parameters():
+                if param.grad is not None:
+                    valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
+                    if not valid_gradients:
+                        break
+            if not valid_gradients:
+                print(f'detected inf or nan values in gradients. not updating model parameters')
+                self.zero_grad()
 if __name__ == '__main__':
-    SOUPS_CHECKPOINT_DIR = 'batchSize=8_2'
+    SOUPS_CHECKPOINT_DIR = 'default3'
     SOUPS_RESULTS_DIR = 'soups/uniform_soup'
     configs = parse_config()
     print(configs)
@@ -220,7 +312,6 @@ if __name__ == '__main__':
     soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
     greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
     greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
-
     sorted_dict = check_points_sort()
     best_checkpoint = None
     results = {'model_name': f'uniform_soup'}
@@ -228,17 +319,33 @@ if __name__ == '__main__':
     tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
     os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
     profiler = SimpleProfiler(filename='profiler.txt')
-    best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cpu')
-    checkpoints_dicts = [best_checkpoint['state_dict']]
-    accuracy_list = [sorted_dict['checkpoints'][0]['miou']]
-    alpha_model = AlphaWrapper(my_model, sorted_dict, len(sorted_dict['checkpoints']))
-
-    trainer = pl.Trainer(accelerator='gpu',
-                         logger=tb_logger,
-                         profiler=profiler)
-
-
-
-    results = trainer.train(alpha_model, val_dataset_loader)
+    alpha_model = AlphaWrapper(my_model, sorted_dict,1,configs)
+    torch.cuda.empty_cache()
+    trainer = pl.Trainer(accelerator='cuda',
+                         devices=[0],
+                         # fast_dev_run = True,
+                         strategy='auto',
+                         max_epochs=configs['train_params']['max_num_epochs'],
+                         # resume_from_checkpoint=configs.checkpoint if not configs.fine_tune and not configs.pretrain2d else None,
+                         callbacks=[LearningRateMonitor(logging_interval='step'),
+                                    EarlyStopping(monitor=configs.monitor,
+                                                  patience=configs.stop_patience,
+                                                  mode='max',
+                                                  verbose=True),
+                                    ] ,
+                         logger=[tb_logger],
+                         profiler=profiler,
+                         gradient_clip_val=1,
+                         accumulate_grad_batches=1,
+                         # log_every_n_steps = 10 ,
+                         limit_val_batches = 0.01,
+                         limit_train_batches = 0.01,
+                         # benchmark = True,
+                         # precision=configs['hyper_parameters']['precision'],
+                         # num_sapnity_val_steps = 2 ,
+                         # detect_anomaly=True
+                         sync_batchnorm=True,
+                         )
+    results = trainer.fit(alpha_model, train_dataloaders =train_dataset_loader,val_dataloaders= val_dataset_loader)
 
 

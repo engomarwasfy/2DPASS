@@ -28,7 +28,7 @@ def load_yaml(file_name):
 def parse_config():
     parser = argparse.ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(0,), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
@@ -118,13 +118,13 @@ def build_loader(config):
 
 if __name__ == '__main__':
 
-        SOUPS_CHECKPOINT_DIR = 'semanticKittiCheckpoints'
-        SOUPS_RESULTS_DIR = 'soups/greedy_soup_semanticKitti'
+        SOUPS_CHECKPOINT_DIR = 'nuscenesCheckpoints'
+        SOUPS_RESULTS_DIR = 'soups/greedy_soup_nuscenes'
         read_json_checkpints= True
         read_exact_json_checkpints = True
         read_exact_json_checkpints_to_resume = False
         save_exact_json_checkpints = False
-        file_name = "semantickitti.json"
+        file_name = "nuscenes.json"
         file_path = os.path.join("soups", file_name)
         configs = parse_config()
         print(configs)
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         profiler = SimpleProfiler(filename='profiler.txt')
         sorted_dict = None
         if (not read_json_checkpints):
-            sorted_dict = check_points_sort(checkpoint_dir=SOUPS_CHECKPOINT_DIR,save_path= 'semantickitti.json' ,load_path=None)
+            sorted_dict = check_points_sort(checkpoint_dir=SOUPS_CHECKPOINT_DIR,save_path= 'nuscenes.json' ,load_path=None)
 
         else:
             if (read_exact_json_checkpints) :
@@ -159,13 +159,12 @@ if __name__ == '__main__':
                 with open(file_name, "r") as json_file:
                     sorted_dict = json.load(json_file)
 
-        num_ingredients = 23
+        num_ingredients = 16
         last_i = 9
-        stop_i = 30
+        stop_i = 87
         dont_stop_at_first_epoch = True
         best_checkpoint_path = sorted_dict['checkpoints'][0]['path']
-        best_checkpoint_path='soups/greedy_soup_semanticKitti/greedy_soup.ckpt'
-
+        best_checkpoint_path='soups/greedy_soup_nuscenes/greedy_soup.ckpt'
         best_checkpoint = torch.load(best_checkpoint_path)
         greedy_soup = copy.deepcopy(best_checkpoint)
         greedy_soup_params =copy.deepcopy(best_checkpoint['state_dict'])
@@ -267,5 +266,5 @@ if __name__ == '__main__':
                     best_miou_so_far = miou
                     greedy_soup_params = potential_greedy_soup_params
                     num_ingredients = num_ingredients + 1
-            if (added_models == 0 and ((not dont_stop_at_first_epoch) or epoch > 0)):
+            if (added_models ==0 and  ((not dont_stop_at_first_epoch) or epoch >0)):
                 break

@@ -1,13 +1,19 @@
 import glob
+import json
 import os
 
 import torch
 
 
-def check_points_sort():
+def check_points_sort(checkpoint_dir,save_path=None,load_path=None):
     # Define the directory where your checkpoints are saved
-    checkpoint_dir = 'default3'
+    #checkpoint_dir = 'default3'
     # Get a list of all checkpoint files in the directory
+    if load_path is not None:
+        with open(load_path) as json_file:
+            report = json.load(json_file)
+        return report
+
     checkpoint_files = glob.glob(os.path.join(checkpoint_dir, '*.ckpt'))
     # Instantiate the ModelCheckpoint callback
     report = {
@@ -36,6 +42,12 @@ def check_points_sort():
     }
     for entry in sorted_dict['checkpoints']:
         print(entry['path'], entry['miou'])
+
+    if save_path is not None:
+        with open(save_path, "w") as json_file:
+            json.dump(sorted_dict, json_file, indent=4)
+        print(f"Sorted dict has been saved to {save_path}")
+
     return sorted_dict
 
 

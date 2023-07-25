@@ -10,7 +10,7 @@ import yaml
 from easydict import EasyDict
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.profilers import SimpleProfiler
-import json
+
 from checkpointSort import check_points_sort
 from dataloader.dataset import get_collate_class, get_model_class
 from dataloader.pc_dataset import get_pc_model_class
@@ -30,7 +30,7 @@ def parse_config():
     # general
     parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
-    parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
+    parser.add_argument('--config_path', default='config/2DPASS-nuscenes.yaml')
     # training
     parser.add_argument('--log_dir', type=str, default='default', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
@@ -118,14 +118,15 @@ def build_loader(config):
 
 if __name__ == '__main__':
 
-        SOUPS_CHECKPOINT_DIR = 'semanticKittiCheckpoints'
-        SOUPS_RESULTS_DIR = 'soups/greedy_soup_semanticKitti'
-        read_json_checkpints= True
-        read_exact_json_checkpints = True
-        read_exact_json_checkpints_to_resume = False
-        save_exact_json_checkpints = False
-        file_name = "semantickitti.json"
-        file_path = os.path.join("soups", file_name)
+        SOUPS_CHECKPOINT_DIR = 'nuscenesCheckpoints'
+        validateAtFirstEpoch = False
+        checkpoints_used = 30
+        weight_search_count = 2
+        num_epochs = 100
+        count_unique_checkpoints = True
+        cummulative_weight_enable = True
+
+        SOUPS_RESULTS_DIR = 'soups/greedy_soup_modified'
         configs = parse_config()
         print(configs)
         os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
@@ -141,100 +142,46 @@ if __name__ == '__main__':
         soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
         greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
         greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
+
+        sorted_dict = check_points_sort(SOUPS_CHECKPOINT_DIR)
         best_checkpoint = None
-        results = {'model_name': f'uniform_soup'}
+        results = {'model_name': f'greedy_soup_modified'}
         log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
         tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
         os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
         profiler = SimpleProfiler(filename='profiler.txt')
-        sorted_dict = None
-        if (not read_json_checkpints):
-            sorted_dict = check_points_sort(checkpoint_dir=SOUPS_CHECKPOINT_DIR,save_path= 'semantickitti.json' ,load_path=None)
 
-        else:
-            if (read_exact_json_checkpints) :
-                with open(file_path, "r") as json_file:
-                    sorted_dict = json.load(json_file)
-            else:
-                with open(file_name, "r") as json_file:
-                    sorted_dict = json.load(json_file)
 
-        num_ingredients = 23
-        last_i = 9
-        stop_i = 30
-        dont_stop_at_first_epoch = True
-        best_checkpoint_path = sorted_dict['checkpoints'][0]['path']
-        best_checkpoint_path='soups/greedy_soup_semanticKitti/greedy_soup.ckpt'
+        best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'])
 
-        best_checkpoint = torch.load(best_checkpoint_path)
         greedy_soup = copy.deepcopy(best_checkpoint)
         greedy_soup_params =copy.deepcopy(best_checkpoint['state_dict'])
         greedy_soup_ingredients = [greedy_soup_params]
         trainer = pl.Trainer(accelerator='gpu',
                              logger=tb_logger,
                              profiler=profiler)
-        my_model = my_model.load_from_checkpoint(best_checkpoint_path, config=configs,
+        my_model = my_model.load_from_checkpoint(sorted_dict['checkpoints'][0]['path'], config=configs,
                                                  strict=(not configs.pretrain2d))
         results = trainer.test(my_model, val_dataset_loader)
         best_miou_so_far = results[0]['val/mIoU']
         checkpointList =(sorted_dict['checkpoints'])
         print(len(checkpointList))
-        N= len(checkpointList)
-        report = {
-            "checkpoints": []
-        }
-        if (read_exact_json_checkpints_to_resume):
-            with open(file_path, "r") as json_file:
-                report = json.load(json_file)
-        number_of_loaded_paths  = len(report['checkpoints'])
-        if (save_exact_json_checkpints):
-            for i, checkpoint in enumerate(checkpointList):
-                if (i < number_of_loaded_paths):
-                    continue
-                print("val iteration number ", i, " out of ", len(checkpointList))
-                normal_checkpoint_model = my_model.load_from_checkpoint(checkpoint['path'], config=configs,
-                                                                    strict=(not configs.pretrain2d))
-                results_model = trainer.test(normal_checkpoint_model, val_dataset_loader)
-                miou_model = results_model[0]['val/mIoU']
-                entry = {
-                    "path": checkpoint['path'],
-                    "miou": miou_model
-                }
-                report['checkpoints'].append(entry)
+        num_ingredients=1
+        ingradient_index_list = [0]
+        cummulative_weight_of_epoch = 0
+        for epoch in range(0, num_epochs):
+            if(cummulative_weight_enable):
+                cummulative_weight_of_epoch += epoch + 1
+            else:
+                cummulative_weight_of_epoch = 1
 
-                sorted_list_exact = sorted(report["checkpoints"], key=lambda x: x["miou"], reverse=True)
-                sorted_dict_exact = {
-                    "checkpoints": sorted_list_exact
-                }
-
-                print("added model miou is ", miou_model)
-
-                with open(file_path, "w") as json_file:
-                    json.dump(sorted_dict_exact, json_file, indent=4)
-                print(f"Sorted dict has been saved to {file_path}")
-                print(sorted_dict_exact)
-                # Sort the list of dictionaries based on accuracy
-            sorted_list_exact_last = sorted(report["checkpoints"], key=lambda x: x["miou"], reverse=True)
-                # Create a new dictionary with the sorted list
-            sorted_dict_exact_last = {
-                "checkpoints": sorted_list_exact_last
-            }
-        if(save_exact_json_checkpints):
-            with open(file_path, "w") as json_file:
-                json.dump(sorted_dict_exact_last, json_file, indent=4)
-            print(f"Sorted dict has been saved to {file_path}")
-            print(sorted_dict_exact_last)
-            sorted_dict = sorted_dict_exact_last
-
-        validateAtFirstEpoch = False
-        for epoch in range(0, N):
-            print("epoch number ", epoch, " out of ", N)
+            print("epoch number ", epoch, " out of ", num_epochs)
             added_models = 0
             for i, checkpoint in enumerate(checkpointList):
-                if (i == stop_i):
-                  break
-                if (epoch == 0 and i <= last_i):
+                if(epoch == 0 and i == 0):
                     continue
+                if (i == checkpoints_used):
+                    break
                 print("iteration number ", i, " out of ", len(checkpointList))
                 new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
                 num_ingredients = max(num_ingredients,len(greedy_soup_ingredients))
@@ -245,27 +192,61 @@ if __name__ == '__main__':
                     results_model = trainer.test(normal_checkpoint_model, val_dataset_loader)
                     miou_model = results_model[0]['val/mIoU']
                     print("added model miou is ", miou_model)
-                potential_greedy_soup_params = {
-                    k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) +
-                        new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
-                    for k in new_ingredient_params
-                }
+                found_better = False
+                potential_greedy_soups = []
+                iteration_points = np.linspace(num_ingredients,
+                                               1
+                                               , weight_search_count, endpoint=
+                                               False
+                                               , dtype=
+                                               int
+                                               )
+                print("iteration points are ", iteration_points)
+                for j in iteration_points:
+                    print("j is ", j)
+                    potential_greedy_soup_params_j = {
+                        k: ( (greedy_soup_params[k].clone() * j ) + new_ingredient_params[k].clone()) / (j + cummulative_weight_of_epoch) 
+                        for k in new_ingredient_params
+                    }
+                    potential_greedy_soups.append(potential_greedy_soup_params_j)
+                    greedy_soup['state_dict'] = potential_greedy_soup_params_j
+                    torch.save(greedy_soup, greedy_soup_temp_checkpoint_path)
+                    greedy_soup['state_dict'] = greedy_soup_params
 
-                greedy_soup['state_dict'] = potential_greedy_soup_params
-                torch.save(greedy_soup, greedy_soup_temp_checkpoint_path)
-                greedy_soup['state_dict'] = greedy_soup_params
-                greedy_soup_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
-                                                                  strict=(not configs.pretrain2d))
-                results = trainer.test(greedy_soup_model, val_dataset_loader)
-                miou = results[0]['val/mIoU']
-                if miou >= best_miou_so_far :
-                    added_models = added_models + 1
-                    greedy_soup['state_dict'] = potential_greedy_soup_params
-                    greedy_soup_ingredients.append(new_ingredient_params)
-                    print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
-                    torch.save(greedy_soup, greedy_soup_checkpoint_path)
-                    best_miou_so_far = miou
-                    greedy_soup_params = potential_greedy_soup_params
-                    num_ingredients = num_ingredients + 1
-            if (added_models == 0 and ((not dont_stop_at_first_epoch) or epoch > 0)):
+
+                    greedy_soup_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+                                                                      strict=(not configs.pretrain2d))
+                    results = trainer.test(greedy_soup_model, val_dataset_loader)
+                    miou = results[0]['val/mIoU']
+                    if miou >= best_miou_so_far:
+                        added_models = added_models + 1
+                        greedy_soup['state_dict'] = potential_greedy_soup_params_j
+                        print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ',
+                              num_ingredients)
+                        torch.save(greedy_soup, greedy_soup_checkpoint_path)
+                        best_miou_so_far = miou
+                        greedy_soup_params = potential_greedy_soup_params_j
+                        found_better = True
+
+
+                    if (found_better and count_unique_checkpoints):
+                        added_models = added_models + 1
+                        if (ingradient_index_list.__contains__(i)):
+                            print("ingradient is already in list ", i)
+                            print("ingradient index list is ", ingradient_index_list)
+                        else:
+                            num_ingredients = num_ingredients + 1
+                            greedy_soup_ingredients.append(new_ingredient_params)
+                            print("ingradient index list is ", ingradient_index_list)
+                            ingradient_index_list.append(i)
+                    elif (found_better):
+                        num_ingredients = num_ingredients + 1
+                        greedy_soup_ingredients.append(new_ingredient_params)
+                        print("ingradient index list is ", ingradient_index_list)
+                        ingradient_index_list.append(i)
+
+
+
+
+            if (added_models == 0):
                 break

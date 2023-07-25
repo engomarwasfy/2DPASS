@@ -102,7 +102,7 @@ dataset_params:
 ###################
 ## Train params
 train_params:
-  max_num_epochs: 96
+  max_num_epochs: 64
   learning_rate: 0.24
   optimizer: SGD  # [SGD, Adam]
   lr_scheduler: CosineAnnealingWarmRestarts  # [StepLR, ReduceLROnPlateau, CosineAnnealingLR, CosineAnnealingWarmRestarts]
