@@ -43,7 +43,7 @@ def load_yaml(file_name):
 def parse_config():
     parser = ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(0,1), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
@@ -207,7 +207,8 @@ if __name__ == '__main__':
         swa = []
 
     #checkpoint = 'soups/best_model.ckpt'
-    checkpoint = 'default/last.ckpt'
+    #checkpoint = 'default/last.ckpt'
+    checkpoint = None
     epoch=64
     torch.cuda.empty_cache()
 
@@ -222,7 +223,7 @@ if __name__ == '__main__':
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[0,1],
+                             devices=[0],
                              #fast_dev_run = True,
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'] ,
