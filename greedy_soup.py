@@ -28,11 +28,11 @@ def load_yaml(file_name):
 def parse_config():
     parser = argparse.ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(0,), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
-    parser.add_argument('--log_dir', type=str, default='default', help='log location')
+    parser.add_argument('--log_dir', type=str, default='default6', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=50, help='patience for stop training')
     parser.add_argument('--save_top_k', type=int, default=10, help='save top k checkpoints, use -1 to checkpoint every epoch')
@@ -159,13 +159,12 @@ if __name__ == '__main__':
                 with open(file_name, "r") as json_file:
                     sorted_dict = json.load(json_file)
 
-        num_ingredients = 23
-        last_i = 9
-        stop_i = 30
+        num_ingredients = 30
+        last_i = 0
+        stop_i = 100
         dont_stop_at_first_epoch = True
         best_checkpoint_path = sorted_dict['checkpoints'][0]['path']
-        best_checkpoint_path='soups/greedy_soup_semanticKitti/greedy_soup.ckpt'
-
+        best_checkpoint_path = 'soups/greedy_soup_semanticKitti/greedy_soup.ckpt'
         best_checkpoint = torch.load(best_checkpoint_path)
         greedy_soup = copy.deepcopy(best_checkpoint)
         greedy_soup_params =copy.deepcopy(best_checkpoint['state_dict'])
@@ -173,8 +172,13 @@ if __name__ == '__main__':
         trainer = pl.Trainer(accelerator='gpu',
                              logger=tb_logger,
                              profiler=profiler)
+
         my_model = my_model.load_from_checkpoint(best_checkpoint_path, config=configs,
                                                  strict=(not configs.pretrain2d))
+        '''
+        my_model = my_model.load_from_checkpoint('soups/greedy_soup_semanticKitti/greedy_soup.ckpt', config=configs,
+                                                 strict=(not configs.pretrain2d))
+        '''
         results = trainer.test(my_model, val_dataset_loader)
         best_miou_so_far = results[0]['val/mIoU']
         checkpointList =(sorted_dict['checkpoints'])
@@ -225,8 +229,9 @@ if __name__ == '__main__':
             print(f"Sorted dict has been saved to {file_path}")
             print(sorted_dict_exact_last)
             sorted_dict = sorted_dict_exact_last
-
+        choosen_indecies = [0, 3, 7, 12, 18, 19, 20, 22, 23]
         validateAtFirstEpoch = False
+        ingradientList = [0, 3, 7, 12, 18, 19, 20, 22, 23, 12, 18, 23, 18, 22, 3, 18, 22, 3, 7]
         for epoch in range(0, N):
             print("epoch number ", epoch, " out of ", N)
             added_models = 0
@@ -234,6 +239,8 @@ if __name__ == '__main__':
                 if (i == stop_i):
                   break
                 if (epoch == 0 and i <= last_i):
+                    continue
+                if (i not in choosen_indecies):
                     continue
                 print("iteration number ", i, " out of ", len(checkpointList))
                 new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
@@ -258,7 +265,7 @@ if __name__ == '__main__':
                                                                   strict=(not configs.pretrain2d))
                 results = trainer.test(greedy_soup_model, val_dataset_loader)
                 miou = results[0]['val/mIoU']
-                if miou >= best_miou_so_far :
+                if miou > best_miou_so_far:
                     added_models = added_models + 1
                     greedy_soup['state_dict'] = potential_greedy_soup_params
                     greedy_soup_ingredients.append(new_ingredient_params)
@@ -267,5 +274,9 @@ if __name__ == '__main__':
                     best_miou_so_far = miou
                     greedy_soup_params = potential_greedy_soup_params
                     num_ingredients = num_ingredients + 1
+                    ingradientList.append(i)
+                    print(ingradientList)
             if (added_models == 0 and ((not dont_stop_at_first_epoch) or epoch > 0)):
-                break
+                num_ingredients = num_ingredients + 1
+                print("increased num ingredients to ", num_ingredients)
+                continue

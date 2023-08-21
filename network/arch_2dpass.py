@@ -98,32 +98,13 @@ class xModalKD(nn.Module):
         pts_feat = self.p2img_mapping(pts_feat[coors_inv], point2img_index, batch_idx)
         pts_pred = self.p2img_mapping(pts_pred_full[coors_inv], point2img_index, batch_idx)
 
-        feat_learner = F.relu(self.leaners[idx](pts_feat))
-        # feat_learner -> voxel-wise feature after 2D learner
-
-        pts_pred_full = self.multihead_3d_classifier[idx]((pts_feat+feat_learner))
-        # pts_feat+feat_learner -> voxel-wise Enhanced 3D Features
-
-        # correspondence
-        pts_label_full = self.voxelize_labels(data_dict['labels'], data_dict['layer_{}'.format(idx)]['full_coors'])
-        pts_pred = self.p2img_mapping(pts_pred_full[coors_inv], point2img_index, batch_idx)
-
-
         # modality fusion
-        feat_learner = self.p2img_mapping(feat_learner[coors_inv], point2img_index, batch_idx)
-        # feat_learner -> point-wise feature after 2D learner and img_mapping
+        feat_learner = F.relu(self.leaners[idx](pts_feat))
         feat_cat = torch.cat([img_feat, feat_learner], 1)
         feat_cat = self.fcs1[idx](feat_cat)
         feat_weight = torch.sigmoid(self.fcs2[idx](feat_cat))
         fuse_feat = F.relu(feat_cat * feat_weight) + img_feat
-        '''
-        # modality fusion
-        feat_learner = F.relu(self.leaners[idx](pts_feat))
-        feat_cat = torch.cat([img_feat, feat_learner], 1)
-        feat_cat = self.fcs1[idx](feat_cat)
-        feat_weight = torch.sigmoid(self.fcs2[idx](feat_cat))
-        fuse_feat = F.relu(feat_cat * feat_weight)
-        '''
+
         # fusion prediction
         fuse_pred = self.multihead_fuse_classifier[idx](fuse_feat)
 
