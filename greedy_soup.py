@@ -122,10 +122,12 @@ if __name__ == '__main__':
         SOUPS_RESULTS_DIR = 'soups/greedy_soup_semanticKitti'
         read_json_checkpints= True
         read_exact_json_checkpints = True
-        read_exact_json_checkpints_to_resume = False
-        save_exact_json_checkpints = False
+        read_exact_json_checkpints_to_resume = True
+        save_exact_json_checkpints = True
         file_name = "semantickitti.json"
         file_path = os.path.join("soups", file_name)
+        new_file_name = 'class_miou_semantickitti.json'
+        new_file_path = os.path.join("soups", new_file_name)
         configs = parse_config()
         print(configs)
         os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
@@ -141,6 +143,8 @@ if __name__ == '__main__':
         soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
         greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
         greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
+        greedy_soup_checkpoint_path_original = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_original.ckpt'
+
         best_checkpoint = None
         results = {'model_name': f'uniform_soup'}
         log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
@@ -159,12 +163,11 @@ if __name__ == '__main__':
                 with open(file_name, "r") as json_file:
                     sorted_dict = json.load(json_file)
 
-        num_ingredients = 30
+        num_ingredients = 1
         last_i = 0
         stop_i = 100
         dont_stop_at_first_epoch = True
         best_checkpoint_path = sorted_dict['checkpoints'][0]['path']
-        best_checkpoint_path = 'soups/greedy_soup_semanticKitti/greedy_soup.ckpt'
         best_checkpoint = torch.load(best_checkpoint_path)
         greedy_soup = copy.deepcopy(best_checkpoint)
         greedy_soup_params =copy.deepcopy(best_checkpoint['state_dict'])
@@ -191,9 +194,10 @@ if __name__ == '__main__':
             with open(file_path, "r") as json_file:
                 report = json.load(json_file)
         number_of_loaded_paths  = len(report['checkpoints'])
+        save_class_miou= True
         if (save_exact_json_checkpints):
             for i, checkpoint in enumerate(checkpointList):
-                if (i < number_of_loaded_paths):
+                if (not save_class_miou and i < number_of_loaded_paths):
                     continue
                 print("val iteration number ", i, " out of ", len(checkpointList))
                 normal_checkpoint_model = my_model.load_from_checkpoint(checkpoint['path'], config=configs,
@@ -213,7 +217,7 @@ if __name__ == '__main__':
 
                 print("added model miou is ", miou_model)
 
-                with open(file_path, "w") as json_file:
+                with open(new_file_path, "w") as json_file:
                     json.dump(sorted_dict_exact, json_file, indent=4)
                 print(f"Sorted dict has been saved to {file_path}")
                 print(sorted_dict_exact)
@@ -231,7 +235,7 @@ if __name__ == '__main__':
             sorted_dict = sorted_dict_exact_last
         choosen_indecies = [0, 3, 7, 12, 18, 19, 20, 22, 23]
         validateAtFirstEpoch = False
-        ingradientList = [0, 3, 7, 12, 18, 19, 20, 22, 23, 12, 18, 23, 18, 22, 3, 18, 22, 3, 7]
+        ingradientList = [0]
         for epoch in range(0, N):
             print("epoch number ", epoch, " out of ", N)
             added_models = 0
@@ -271,11 +275,15 @@ if __name__ == '__main__':
                     greedy_soup_ingredients.append(new_ingredient_params)
                     print('best_checkpoint is at iteration ', i, ' with miou ', miou, ' and num_ingredients ', num_ingredients)
                     torch.save(greedy_soup, greedy_soup_checkpoint_path)
+                    if(epoch == 0):
+                        torch.save(greedy_soup, greedy_soup_checkpoint_path_original)
                     best_miou_so_far = miou
                     greedy_soup_params = potential_greedy_soup_params
                     num_ingredients = num_ingredients + 1
                     ingradientList.append(i)
                     print(ingradientList)
+            if (True):
+                break
             if (added_models == 0 and ((not dont_stop_at_first_epoch) or epoch > 0)):
                 num_ingredients = num_ingredients + 1
                 print("increased num ingredients to ", num_ingredients)

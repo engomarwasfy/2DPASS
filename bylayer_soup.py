@@ -51,7 +51,7 @@ def parse_config():
     parser = argparse.ArgumentParser()
     # general
     parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
-    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument("--seed", default=42, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
     parser.add_argument('--log_dir', type=str, default='default', help='log location')

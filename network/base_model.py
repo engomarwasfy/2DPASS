@@ -5,6 +5,7 @@
 @file: base_model.py
 @time: 2021/12/7 22:39
 '''
+import json
 import os
 from datetime import datetime
 
@@ -143,19 +144,17 @@ class LightningBaseModel(pl.LightningModule):
 
     def test_step(self, data_dict, batch_idx):
         indices = data_dict['indices']
-        raw_labels = data_dict['raw_labels'].squeeze(1).cpu()
         origin_len = data_dict['origin_len']
+        raw_labels = data_dict['raw_labels'].squeeze(1).cpu()
+        path = data_dict['path'][0]
+
         vote_logits = torch.zeros((len(raw_labels), self.num_classes))
         data_dict = self.forward(data_dict)
+        vote_logits.index_add_(0, indices.cpu(), data_dict['logits'].cpu())
 
-        if self.args['test']:
-            vote_logits.index_add_(0, indices.cpu(), data_dict['logits'].cpu())
-            if self.args['dataset_params']['pc_dataset_type'] == 'SemanticKITTI_multiscan':
-                vote_logits = vote_logits[:origin_len]
-                raw_labels = raw_labels[:origin_len]
-        else:
-            vote_logits = data_dict['logits'].cpu()
-            raw_labels = data_dict['labels'].squeeze(0).cpu()
+        if self.args['dataset_params']['pc_dataset_type'] == 'SemanticKITTI_multiscan':
+            vote_logits = vote_logits[:origin_len]
+            raw_labels = raw_labels[:origin_len]
 
         prediction = vote_logits.argmax(1)
 
@@ -165,14 +164,64 @@ class LightningBaseModel(pl.LightningModule):
             prediction += 1
             raw_labels += 1
 
-        self.val_acc(prediction, raw_labels)
-        self.log('val/acc', self.val_acc, on_epoch=True)
-        self.val_iou(
-            prediction.cpu().detach().numpy(),
-            raw_labels.cpu().detach().numpy(),
-        )
+        if not self.args['submit_to_server']:
+            self.val_acc(prediction, raw_labels)
+            self.log('val/acc', self.val_acc, on_epoch=True)
+            self.val_iou(
+                prediction.cpu().detach().numpy(),
+                raw_labels.cpu().detach().numpy(),
+             )
+        else:
+            if self.args['dataset_params']['pc_dataset_type'] != 'nuScenes':
+                components = path.split('/')
+                sequence = components[-3]
+                points_name = components[-1]
+                label_name = points_name.replace('bin', 'label')
+                full_save_dir = os.path.join(self.submit_dir, 'sequences', sequence, 'predictions')
+                os.makedirs(full_save_dir, exist_ok=True)
+                full_label_name = os.path.join(full_save_dir, label_name)
+
+                if os.path.exists(full_label_name):
+                    print('%s already exsist...' % (label_name))
+                    pass
+
+                valid_labels = np.vectorize(self.mapfile['learning_map_inv'].__getitem__)
+                original_label = valid_labels(vote_logits.argmax(1).cpu().numpy().astype(int))
+                final_preds = original_label.astype(np.uint32)
+                final_preds.tofile(full_label_name)
+
+            else:
+                meta_dict = {
+                    "meta": {
+                        "use_camera": False,
+                        "use_lidar": True,
+                        "use_map": False,
+                        "use_radar": False,
+                        "use_external": False,
+                    }
+                }
+                os.makedirs(os.path.join(self.submit_dir, 'test'), exist_ok=True)
+                with open(os.path.join(self.submit_dir, 'test', 'submission.json'), 'w', encoding='utf-8') as f:
+                    json.dump(meta_dict, f)
+                original_label = prediction.cpu().numpy().astype(np.uint8)
+
+                #assert all((original_label > 0) & (original_label < 17)), \
+                #    "Error: Array for predictions must be between 1 and 16 (inclusive)."
+
+                full_save_dir = os.path.join(self.submit_dir, 'lidarseg/test')
+                full_label_name = os.path.join(full_save_dir, path + '_lidarseg.bin')
+                os.makedirs(full_save_dir, exist_ok=True)
+
+                if os.path.exists(full_label_name):
+                    print('%s already exsist...' % (full_label_name))
+                else:
+                    original_label.tofile(full_label_name)
 
         return data_dict['loss']
+
+
+
+
 
     def on_validation_epoch_end(self):
         iou, best_miou = self.val_iou.compute()
@@ -181,26 +230,40 @@ class LightningBaseModel(pl.LightningModule):
         self.log('val/mIoU', mIoU, on_epoch=True)
         self.log('val/best_miou', best_miou, on_epoch=True)
         str_print += 'Validation per class iou: '
+        class_iou_values = []  # To store class-wise IoU values
 
         for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
             str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
+            class_iou_values.append((class_name, class_iou))  # Collect class-wise IoU values
 
         str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
         self.print(str_print)
+        # Saving class-wise IoU values in self.log
+        for class_name, class_iou in class_iou_values:
+            self.log('val/class_iou/' + class_name, class_iou, on_epoch=True)
+
         self.val_iou.hist_list=[]
+
     def on_test_epoch_end(self):
-        iou, best_miou = self.val_iou.compute()
-        mIoU = np.nanmean(iou)
-        str_print = ''
-        self.log('val/mIoU', mIoU, on_epoch=True)
-        self.log('val/best_miou', best_miou, on_epoch=True)
-        str_print += 'Validation per class iou: '
+        if not self.args['submit_to_server']:
+            iou, best_miou = self.val_iou.compute()
+            mIoU = np.nanmean(iou)
+            str_print = ''
+            self.log('val/mIoU', mIoU, on_epoch=True)
+            self.log('val/best_miou', best_miou, on_epoch=True)
+            str_print += 'Validation per class iou: '
 
-        for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
-            str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
+            class_iou_values = []  # To store class-wise IoU values
 
-        str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
-        self.print(str_print)
+            for class_name, class_iou in zip(self.val_iou.unique_label_str, iou):
+                str_print += '\n%s : %.2f%%' % (class_name, class_iou * 100)
+                class_iou_values.append((class_name, class_iou))  # Collect class-wise IoU values
+
+            str_print += '\nCurrent val miou is %.3f while the best val miou is %.3f' % (mIoU * 100, best_miou * 100)
+            # Saving class-wise IoU values in self.log
+            for class_name, class_iou in class_iou_values:
+                self.log('val/class_iou/' + class_name, class_iou, on_epoch=True)
+            self.print(str_print)
 
     def on_after_backward(self) -> None:
         """

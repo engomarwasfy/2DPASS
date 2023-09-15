@@ -43,7 +43,7 @@ def load_yaml(file_name):
 def parse_config():
     parser = ArgumentParser()
     # general
-    parser.add_argument('--gpu', type=int, nargs='+', default=(1,), help='specify gpu devices')
+    parser.add_argument('--gpu', type=int, nargs='+', default=(0,1,2), help='specify gpu devices')
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
@@ -197,8 +197,8 @@ if __name__ == '__main__':
         save_top_k=configs.save_top_k,
         dirpath="default")
 
-    #if configs.checkpoint is not None:
-    print('load pre-trained model...')
+    if configs.checkpoint is not None:
+        print('load pre-trained model...')
 
 
     if configs.SWA:
@@ -208,22 +208,21 @@ if __name__ == '__main__':
 
     #checkpoint = 'soups/best_model.ckpt'
     #checkpoint = 'default/last.ckpt'
-    checkpoint = None
-    epoch=64
+    #checkpoint = None
     torch.cuda.empty_cache()
 
-    if checkpoint is not None:
+    if configs.checkpoint is not None:
         if configs.fine_tune or configs.test or configs.pretrain2d:
-            my_model = my_model.load_from_checkpoint(checkpoint, config=configs,
+            my_model = my_model.load_from_checkpoint(configs.checkpoint, config=configs,
                                                      strict=(not configs.pretrain2d))
         else:
             # continue last training
-            my_model = my_model.load_from_checkpoint(checkpoint)
+            my_model = my_model.load_from_checkpoint(configs.checkpoint)
     if not configs.test:
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[0],
+                             devices=[1],
                              #fast_dev_run = True,
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'] ,
@@ -256,14 +255,12 @@ if __name__ == '__main__':
                             sync_batchnorm=True,
                              )
         torch.cuda.empty_cache()
-        trainer.fit(model=my_model,train_dataloaders =train_dataset_loader,val_dataloaders= val_dataset_loader,ckpt_path=checkpoint)
+        trainer.fit(model=my_model,train_dataloaders =train_dataset_loader,val_dataloaders= val_dataset_loader,ckpt_path=configs.checkpoint)
 
     else:
         print('Start testing...')
-        assert num_gpu == 1, 'only support single GPU testing!'
-        trainer = pl.Trainer(gpus=[i for i in range(num_gpu)],
-                             accelerator='ddp',
-                             resume_from_checkpoint=configs.checkpoint,
+        #assert num_gpu == 1, 'only support single GPU testing!'
+        trainer = pl.Trainer(devices=[0],
                              logger=tb_logger,
                              profiler=profiler)
         trainer.test(my_model, test_dataset_loader if configs.submit_to_server else val_dataset_loader)
