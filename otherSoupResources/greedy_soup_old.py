@@ -1,32 +1,4 @@
-###
-# Disclaimer: This is not our central method, we recommend the greedy soup which is found in main.py.
-# This method is described in appendix I and, compared to main.py, this code is much less tested.
-# For instance, we don't know how stable the results are under optimization noise. However, we expect
-# this method to outperform greedy soup. Still, we recommend using greedy soup and not this.
-# As mentioned in the paper, this code is computationally expernsive as it requires loading models in memory.
-# We run this on a node with 490GB RAM and use 1 GPU with 40GB of memory.
-# It also looks like PyTorch released a very helpful utility which we recommend if re-implementing:
-# https://pytorch.org/docs/stable/generated/torch.nn.utils.stateless.functional_call.html?utm_source=twitter&utm_medium=organic_social&utm_campaign=docs&utm_content=functional-api-for-modules
-# When running with lr = 0.05 and epochs = 5 we get 81.38%.
-###
-
 import argparse
-import os
-import torch
-import time
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-
-import torch
-from torch import nn
-
-
-import pytorch_lightning as pl
-
-import argparse
-import copy
 import importlib
 import os
 
@@ -143,94 +115,100 @@ def build_loader(config):
 
     return train_dataset_loader, val_dataset_loader, test_dataset_loader
 
-class AlphaWrapper(pl.LightningModule):
-    def __init__(self, model,models,total_number_of_models):
-        super(AlphaWrapper, self).__init__()
-        self.model = model
-        self.alpha_raw = nn.Parameter(torch.ones(total_number_of_models))
-        self.beta = nn.Parameter(torch.tensor(1.))
-
-    def alpha(self):
-        return nn.functional.softmax(self.alpha_raw, dim=0)
-
-    def forward(self, inp):
-        alph = self.alpha()
-        #generate the model
-        out = self.model(inp)
-        return self.beta * out
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.001)
-        return optimizer
-    def training_step(self, input, groundTruth) :
-        output= self.forward(input)
-        loss = nn.CrossEntropyLoss()(output, groundTruth)
-        return loss
-    def validation_step(self, input):
-         pass
-
-
-
 if __name__ == '__main__':
-    SOUPS_CHECKPOINT_DIR = 'batchSize=8_2'
-    SOUPS_RESULTS_DIR = 'soups/uniform_soup'
-    configs = parse_config()
-    print(configs)
-    os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
-    num_gpu = len(configs.gpu)
-    torch.manual_seed(configs.seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
-    np.random.seed(configs.seed)
-    config_path = configs.config_path
-    train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
-    model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
-    my_model = model_file.get_model(configs)
-    soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
-    greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
-    greedy_soup_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup.ckpt'
+        NUM_MODELS = 5
+        SOUPS_CHECKPOINT_DIR = '../default'
+        SOUPS_RESULTS_DIR = 'soups/uniform_soup'
+        SOUPS_RESULTS_FILE_NAME = 'soup.ckpt'
+        # parameters
+        configs = parse_config()
+        print(configs)
 
-    sorted_dict = check_points_sort()
-    best_checkpoint = None
-    results = {'model_name': f'uniform_soup'}
-    log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
-    tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
-    os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
-    profiler = SimpleProfiler(filename='profiler.txt')
-    best_checkpoint = torch.load(sorted_dict['checkpoints'][0]['path'], map_location='cpu')
-    checkpoints_dicts = [best_checkpoint['state_dict']]
-    accuracy_list = [sorted_dict['checkpoints'][0]['miou']]
-    trainer = pl.Trainer(accelerator='gpu',
-                         logger=tb_logger,
-                         profiler=profiler)
+        # setting
+        os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, configs.gpu))
+        num_gpu = len(configs.gpu)
 
-    for i, checkpoint in enumerate(sorted_dict['checkpoints']):
-        print("iteration number ", i, " out of ", len(sorted_dict['checkpoints']))
-        if i == 0:
-            continue
-        new_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
-        checkpoints_dicts.append(new_params)
-        accuracy_list.append(checkpoint['miou'])
-    weight_list = accuracy_list / np.sum(accuracy_list)
-    trained_checkpoint = {
-        k: best_checkpoint['state_dict'][k].clone() * weight_list[0]
-        for k in best_checkpoint['state_dict']
-    }
-    torch.cuda.empty_cache()
-    for i, checkpoint in enumerate(sorted_dict['checkpoints']):
-        new_ingredient_params = torch.load(checkpoint['path'], map_location='cpu')['state_dict']
-        if (i == 0):
-            continue
-        trained_checkpoint = {
-            k: trained_checkpoint[k].clone() +
-               new_ingredient_params[k].clone() * weight_list[i]
-            for k in new_ingredient_params
-        }
-    best_checkpoint['state_dict'] = trained_checkpoint
-    trained_checkpoint_full = copy.deepcopy(best_checkpoint)
-    torch.save(best_checkpoint, greedy_soup_temp_checkpoint_path)
-    my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
-                                             strict=(not configs.pretrain2d))
+        # reproducibility
+        torch.manual_seed(configs.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = True
+        np.random.seed(configs.seed)
+        config_path = configs.config_path
 
-    results = trainer.predict(my_model, val_dataset_loader)
+        train_dataset_loader, val_dataset_loader, test_dataset_loader = build_loader(configs)
+        model_file = importlib.import_module('network.' + configs['model_params']['model_architecture'])
+        my_model = model_file.get_model(configs)
+
+        # create the uniform soup sequentially to not overload memory
+        soups = os.getcwd() + '/' + SOUPS_CHECKPOINT_DIR
+        soup_result_file = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + SOUPS_RESULTS_FILE_NAME
+        greedy_soup_temp_checkpoint_path = os.getcwd() + '/' + SOUPS_RESULTS_DIR + '/' + 'greedy_soup_temp.ckpt'
+        uniform_soup = 'uniform_soup'
+        sorted_dict = check_points_sort()
+        best_checkpoint = None
+        for i, checkpoint in enumerate(sorted_dict['checkpoints']):
+            if i == NUM_MODELS:
+                break
+            modelWeight = torch.load(checkpoint['path'])
+            state_dict = modelWeight.get('state_dict')
+            if i == 0:
+                uniform_soup = {k: v * (1. / NUM_MODELS) for k, v in state_dict.items()}
+                best_checkpoint = modelWeight
+            else:
+                uniform_soup = {k: v * (1. / NUM_MODELS) + uniform_soup[k] for k, v in state_dict.items()}
+
+        best_checkpoint['state_dict'] = uniform_soup
+        torch.save(best_checkpoint, soup_result_file)
+
+        results = {'model_name': f'uniform_soup'}
+        log_folder = 'logs/' + configs['dataset_params']['pc_dataset_type']
+        tb_logger = pl_loggers.TensorBoardLogger(log_folder, name=configs.log_dir, default_hp_metric=False)
+        os.makedirs(f'{log_folder}/{configs.log_dir}', exist_ok=True)
+        profiler = SimpleProfiler(filename='profiler.txt')
+        print('Start testing...')
+        assert num_gpu == 1, 'only support single GPU testing!'
+        my_model = my_model.load_from_checkpoint(soup_result_file, config=configs, strict=(not configs.pretrain2d))
+        trainer = pl.Trainer(accelerator='gpu',
+                             # resume_from_checkpoint=soup_result_file,
+                             logger=tb_logger,
+                             profiler=profiler)
+
+
+
+        best_miou_so_far=0
+        num_ingredients = 0
+        greedy_soup_initial = torch.load(sorted_dict['checkpoints'][0]['path'])
+        greedy_soup_params = greedy_soup_initial['state_dict']
+        greedy_soup_ingredients = [greedy_soup_params]
+        # Now, iterate through all models and consider adding them to the greedy soup.
+        for i, checkpoint in enumerate(sorted_dict['checkpoints']):
+            if i == 0:
+                best_checkpoint= torch.load(checkpoint['path'])
+            # Get the potential greedy soup, which consists of the greedy soup with the new model added.
+            new_ingredient_params = torch.load(checkpoint['path'])['state_dict']
+            num_ingredients = num_ingredients + 1
+            potential_greedy_soup_params = {
+                k : greedy_soup_params[k].clone() * (num_ingredients / (num_ingredients + 1.)) + 
+                    new_ingredient_params[k].clone() * (1. / (num_ingredients + 1))
+                for k in new_ingredient_params
+            }
+            best_checkpoint['state_dict'] = potential_greedy_soup_params
+
+            # Save the potential greedy soup to a temporary checkpoint file.
+            torch.save(best_checkpoint, greedy_soup_temp_checkpoint_path)
+            my_model = my_model.load_from_checkpoint(greedy_soup_temp_checkpoint_path, config=configs,
+                                                     strict=(not configs.pretrain2d))
+            trainer = pl.Trainer(accelerator='gpu',
+                                 # resume_from_checkpoint=soup_result_file,
+                                 logger=tb_logger,
+                                 profiler=profiler)
+            results = trainer.test(my_model, val_dataset_loader)
+            miou = results[0]['val/mIoU']
+
+            # If accuracy on the held-out val set increases, add the new model to the greedy soup.
+            if miou > best_miou_so_far:
+                greedy_soup_ingredients.append(new_ingredient_params)
+                best_miou_so_far = miou
+                greedy_soup_params = potential_greedy_soup_params
 
 

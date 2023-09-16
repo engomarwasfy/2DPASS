@@ -1,0 +1,528 @@
+{
+    "checkpoints": [
+        {
+            "path": "semanticKittiCheckpoints/greedy_soup.ckpt",
+            "miou": 0.6593684232406003
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=58-step=93249.ckpt",
+            "miou": 0.6593684232406003
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=62-step=100422.ckpt",
+            "miou": 0.6558915440295235
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=56-step=90858.ckpt",
+            "miou": 0.6551232990856913
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=63-step=101219.ckpt",
+            "miou": 0.6548095971100372
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=61-step=98828.ckpt",
+            "miou": 0.6546837065169439
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=60-step=96437.ckpt",
+            "miou": 0.6542707549657161
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=62-step=99625.ckpt",
+            "miou": 0.654251461737198
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=59-step=94843.ckpt",
+            "miou": 0.6527018901977245
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=56-step=90061.ckpt",
+            "miou": 0.651450733641194
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=60-step=97234.ckpt",
+            "miou": 0.651155517199793
+        },
+        {
+            "path": "semanticKittiCheckpoints/last.ckpt",
+            "miou": 0.6503861059574428
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=63-step=102016.ckpt",
+            "miou": 0.6503861059574428
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=61-step=98031.ckpt",
+            "miou": 0.6501397259519751
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=54-step=87670.ckpt",
+            "miou": 0.6491117176849068
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=57-step=91655.ckpt",
+            "miou": 0.6490856117917498
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=59-step=95640.ckpt",
+            "miou": 0.6489415518454116
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=55-step=88467.ckpt",
+            "miou": 0.6480165980438184
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=57-step=92452.ckpt",
+            "miou": 0.647306436003525
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=55-step=89264.ckpt",
+            "miou": 0.6454401784860598
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=58-step=94046.ckpt",
+            "miou": 0.6453315720041534
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=48-step=77309.ckpt",
+            "miou": 0.6413239862401374
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=50-step=81294.ckpt",
+            "miou": 0.6410572353993905
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=48-step=78106.ckpt",
+            "miou": 0.6401306731188477
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=52-step=83685.ckpt",
+            "miou": 0.6392430282457671
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=54-step=86873.ckpt",
+            "miou": 0.6385518819725537
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=53-step=86076.ckpt",
+            "miou": 0.6382988934800284
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=49-step=79700.ckpt",
+            "miou": 0.6381295098197315
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=49-step=78903.ckpt",
+            "miou": 0.6380721914394819
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=52-step=84482.ckpt",
+            "miou": 0.6350330249026986
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=51-step=82888.ckpt",
+            "miou": 0.6347136770437182
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=53-step=85279.ckpt",
+            "miou": 0.6323730601119725
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=38-step=62166.ckpt",
+            "miou": 0.6314671738562027
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=45-step=72527.ckpt",
+            "miou": 0.630626444228972
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=47-step=75715.ckpt",
+            "miou": 0.6260584958730611
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=50-step=80497.ckpt",
+            "miou": 0.6259302380499422
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=44-step=71730.ckpt",
+            "miou": 0.6252261482476701
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=51-step=82091.ckpt",
+            "miou": 0.6221736097570003
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=45-step=73324.ckpt",
+            "miou": 0.6204520540648033
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=41-step=66948.ckpt",
+            "miou": 0.6172739080551796
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=47-step=76512.ckpt",
+            "miou": 0.6170443132355902
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=42-step=67745.ckpt",
+            "miou": 0.6161907571603094
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=46-step=74918.ckpt",
+            "miou": 0.6153523825226799
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=44-step=70933.ckpt",
+            "miou": 0.6148259296808409
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=36-step=58978.ckpt",
+            "miou": 0.6126053939067307
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=35-step=57384.ckpt",
+            "miou": 0.6109448186837426
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=40-step=65354.ckpt",
+            "miou": 0.610624812300279
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=40-step=64557.ckpt",
+            "miou": 0.6105499344547338
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=38-step=61369.ckpt",
+            "miou": 0.6085663352347621
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=46-step=74121.ckpt",
+            "miou": 0.6081540075401918
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=43-step=70136.ckpt",
+            "miou": 0.6066922443228844
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=33-step=54196.ckpt",
+            "miou": 0.6052864544466344
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=34-step=54993.ckpt",
+            "miou": 0.6047526678304685
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=41-step=66151.ckpt",
+            "miou": 0.6023849384144939
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=29-step=47820.ckpt",
+            "miou": 0.599709554561524
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=43-step=69339.ckpt",
+            "miou": 0.5996986548745016
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=39-step=63760.ckpt",
+            "miou": 0.5991287050312128
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=22-step=35865.ckpt",
+            "miou": 0.59478703646303
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=36-step=58181.ckpt",
+            "miou": 0.5938292449595307
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=23-step=37459.ckpt",
+            "miou": 0.5935892585942589
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=22-step=36662.ckpt",
+            "miou": 0.5934738852903851
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=39-step=62963.ckpt",
+            "miou": 0.5933838556660211
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=28-step=45429.ckpt",
+            "miou": 0.5921593388308966
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=29-step=47023.ckpt",
+            "miou": 0.5916130363426282
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=37-step=59775.ckpt",
+            "miou": 0.5905267758691182
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=31-step=51008.ckpt",
+            "miou": 0.5881220073744294
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=42-step=68542.ckpt",
+            "miou": 0.5867175756234936
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=37-step=60572.ckpt",
+            "miou": 0.5864198164335263
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=25-step=40647.ckpt",
+            "miou": 0.5861171219722683
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=30-step=49414.ckpt",
+            "miou": 0.5854595179643889
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=24-step=39053.ckpt",
+            "miou": 0.5842132336415657
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=10-step=17534.ckpt",
+            "miou": 0.5834793700211279
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=33-step=53399.ckpt",
+            "miou": 0.5827773006907303
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=35-step=56587.ckpt",
+            "miou": 0.582643295612609
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=17-step=28692.ckpt",
+            "miou": 0.5822320761294136
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=26-step=42241.ckpt",
+            "miou": 0.5793741532588289
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=16-step=26301.ckpt",
+            "miou": 0.5786124094038702
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=32-step=51805.ckpt",
+            "miou": 0.5783163905797843
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=25-step=41444.ckpt",
+            "miou": 0.5772931051070141
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=21-step=34271.ckpt",
+            "miou": 0.5730435297568435
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=15-step=25504.ckpt",
+            "miou": 0.5708993441546651
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=26-step=43038.ckpt",
+            "miou": 0.5701899219158653
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=18-step=30286.ckpt",
+            "miou": 0.5698841398960902
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=27-step=43835.ckpt",
+            "miou": 0.5697876654191321
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=9-step=15143.ckpt",
+            "miou": 0.5693689543036453
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=28-step=46226.ckpt",
+            "miou": 0.5671654676547909
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=23-step=38256.ckpt",
+            "miou": 0.5636362657989723
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=34-step=55790.ckpt",
+            "miou": 0.5630601952278363
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=11-step=18331.ckpt",
+            "miou": 0.5608399130198054
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=20-step=33474.ckpt",
+            "miou": 0.5607915802379534
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=15-step=24707.ckpt",
+            "miou": 0.5596373523273912
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=16-step=27098.ckpt",
+            "miou": 0.5581166884336165
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=30-step=48617.ckpt",
+            "miou": 0.5577876912194539
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=12-step=20722.ckpt",
+            "miou": 0.5560188370445038
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=19-step=31083.ckpt",
+            "miou": 0.5529373762123604
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=21-step=35068.ckpt",
+            "miou": 0.5507428038349431
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=24-step=39850.ckpt",
+            "miou": 0.5501851976876049
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=12-step=19925.ckpt",
+            "miou": 0.5496916398496466
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=31-step=50211.ckpt",
+            "miou": 0.5461074797093733
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=13-step=22316.ckpt",
+            "miou": 0.5459163922293083
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=14-step=23113.ckpt",
+            "miou": 0.5446355008187871
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=27-step=44632.ckpt",
+            "miou": 0.5444601148330326
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=8-step=13549.ckpt",
+            "miou": 0.5397468743407325
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=6-step=11158.ckpt",
+            "miou": 0.539174947579569
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=4-step=7970.ckpt",
+            "miou": 0.5341006542074727
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=7-step=11955.ckpt",
+            "miou": 0.5308971793432553
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=7-step=12752.ckpt",
+            "miou": 0.5275500309923304
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=5-step=8767.ckpt",
+            "miou": 0.5272183603455045
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=14-step=23910.ckpt",
+            "miou": 0.5257125326705092
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=19-step=31880.ckpt",
+            "miou": 0.5161795917784211
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=8-step=14346.ckpt",
+            "miou": 0.516120523127729
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=4-step=7173.ckpt",
+            "miou": 0.5102301764546306
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=17-step=27895.ckpt",
+            "miou": 0.5090193645855978
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=10-step=16737.ckpt",
+            "miou": 0.503623217424659
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=11-step=19128.ckpt",
+            "miou": 0.4999001062557051
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=3-step=6376.ckpt",
+            "miou": 0.4986791569562276
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=9-step=15940.ckpt",
+            "miou": 0.49645872929777635
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=6-step=10361.ckpt",
+            "miou": 0.4901474834989831
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=2-step=3985.ckpt",
+            "miou": 0.463412000887188
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=13-step=21519.ckpt",
+            "miou": 0.45712931874171475
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=5-step=9564.ckpt",
+            "miou": 0.45569259706962156
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=2-step=4782.ckpt",
+            "miou": 0.44056320344120203
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=1-step=2391.ckpt",
+            "miou": 0.4399575686215571
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=20-step=32677.ckpt",
+            "miou": 0.432374449323558
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=18-step=29489.ckpt",
+            "miou": 0.4313815961376167
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=3-step=5579.ckpt",
+            "miou": 0.42959576106569
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=37-step=59775-v1.ckpt",
+            "miou": 0.4234694808760693
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=32-step=52602.ckpt",
+            "miou": 0.4193608206397819
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=1-step=3188.ckpt",
+            "miou": 0.4167974891156101
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=0-step=1594.ckpt",
+            "miou": 0.3972615199834864
+        },
+        {
+            "path": "semanticKittiCheckpoints/epoch=0-step=797.ckpt",
+            "miou": 0.344627195980281
+        }
+    ]
+}

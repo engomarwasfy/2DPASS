@@ -47,7 +47,7 @@ def parse_config():
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument('--config_path', default='config/2DPASS-semantickitti.yaml')
     # training
-    parser.add_argument('--log_dir', type=str, default='default', help='log location')
+    parser.add_argument('--log_dir', type=str, default='big1', help='log location')
     parser.add_argument('--monitor', type=str, default='val/mIoU', help='the maximum metric')
     parser.add_argument('--stop_patience', type=int, default=5000, help='patience for stop training')
     parser.add_argument('--save_top_k', type=int, default=1000, help='save top k checkpoints, use -1 to checkpoint every epoch')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         # init trainer
         print('Start training...')
         trainer = pl.Trainer(accelerator='cuda',
-                             devices=[1],
+                             devices=[2],
                              #fast_dev_run = True,
                              strategy= 'auto',
                              max_epochs=configs['train_params']['max_num_epochs'] ,
