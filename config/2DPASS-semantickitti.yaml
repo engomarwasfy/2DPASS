@@ -21,7 +21,6 @@ model_params:
   num_classes: 20
   backbone_2d: resnet34
   pretrained2d: True
-  checkpoint: './default3/last.ckpt'
 ###################
 ## Dataset options
 dataset_params:

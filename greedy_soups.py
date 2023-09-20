@@ -179,18 +179,22 @@ if __name__ == '__main__':
         report = {
             "checkpoints": []
         }
-        num_ingredients = 7
-        last_i = 11
+        num_ingredients = 22
+        last_i = 59
         stop_i = 100
-        last_epoch=2
+        last_epoch=4
         #choosen_indecies = num ingredients
         validateAtFirstEpoch = False
-        ingradientList = [0, 1, 2, 4, 5, 8, 11]
-        added_models_initial = 7
+        ingradientList = [0, 1, 2, 4, 5, 8, 11, 18, 20, 21, 22, 23, 25, 5, 8, 11, 25, 0, 5, 8, 11, 22]
+
+        added_models_initial = 1
 
         for epoch in range(last_epoch, N):
             print("epoch number ", epoch, " out of ", N)
-            added_models = added_models_initial
+            if (epoch == last_epoch):
+                added_models = added_models_initial
+            else:
+                added_models = 0
             for i, checkpoint in enumerate(checkpointList):
                 if (i == stop_i):
                   break
@@ -235,7 +239,5 @@ if __name__ == '__main__':
                     num_ingredients = num_ingredients + 1
                     ingradientList.append(i)
                     print(ingradientList)
-            if (added_models == 0 and ((not dont_stop_at_first_epoch) or epoch > 0)):
-                num_ingredients = num_ingredients + 1
-                print("increased num ingredients to ", num_ingredients)
+            if (added_models == 0 ):
                 break
