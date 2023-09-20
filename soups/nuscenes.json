@@ -1,0 +1,1304 @@
+{
+    "checkpoints": [
+        {
+            "path": "nuscenesCheckpoints/epoch=75-step=264579.ckpt",
+            "miou": 0.757094937691142
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=78-step=277764.ckpt",
+            "miou": 0.7546098473612972
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=72-step=256668.ckpt",
+            "miou": 0.7545614397362019
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=79-step=280401.ckpt",
+            "miou": 0.7543001154978133
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=67-step=237330.ckpt",
+            "miou": 0.7542404832364389
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=73-step=258426.ckpt",
+            "miou": 0.7541029702587126
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=74-step=263700.ckpt",
+            "miou": 0.7539768588625728
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=74-step=262821.ckpt",
+            "miou": 0.753580105719777
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=70-step=248757.ckpt",
+            "miou": 0.753306285793651
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=73-step=259305-v1.ckpt",
+            "miou": 0.7531903462661396
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=73-step=259305.ckpt",
+            "miou": 0.7531891826196678
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=73-step=260184.ckpt",
+            "miou": 0.7531590456945986
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=74-step=261063.ckpt",
+            "miou": 0.7530396185124544
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=71-step=252273.ckpt",
+            "miou": 0.7529262059979139
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=73-step=257547.ckpt",
+            "miou": 0.7528837286229196
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=77-step=274248.ckpt",
+            "miou": 0.7527879533075328
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=72-step=255789.ckpt",
+            "miou": 0.752763050150193
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=72-step=254031.ckpt",
+            "miou": 0.7520642931472401
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=77-step=272490.ckpt",
+            "miou": 0.7520573139951048
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=69-step=243483.ckpt",
+            "miou": 0.7520561231007599
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=76-step=268095.ckpt",
+            "miou": 0.751957518439013
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=78-step=276885.ckpt",
+            "miou": 0.7519404361493348
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=71-step=253152.ckpt",
+            "miou": 0.7517611548119639
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=70-step=247878.ckpt",
+            "miou": 0.7517210480294771
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=74-step=261942.ckpt",
+            "miou": 0.7516456374126492
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=71-step=250515.ckpt",
+            "miou": 0.7515370508877978
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=71-step=251394.ckpt",
+            "miou": 0.7515171823353699
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=79-step=281280.ckpt",
+            "miou": 0.7514459972603904
+        },
+        {
+            "path": "nuscenesCheckpoints/last.ckpt",
+            "miou": 0.7514429068958483
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=66-step=234693.ckpt",
+            "miou": 0.7514407901077802
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=75-step=267216.ckpt",
+            "miou": 0.7514314456446987
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=72-step=254910.ckpt",
+            "miou": 0.751393533056026
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=77-step=271611.ckpt",
+            "miou": 0.7510828808330221
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=70-step=249636.ckpt",
+            "miou": 0.751062500034877
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=65-step=230298.ckpt",
+            "miou": 0.7502558583720029
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=69-step=244362.ckpt",
+            "miou": 0.7500748374360438
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=68-step=239967.ckpt",
+            "miou": 0.7498520359051819
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=76-step=268974.ckpt",
+            "miou": 0.7497647560713867
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=68-step=242604.ckpt",
+            "miou": 0.7497272157370272
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=66-step=235572.ckpt",
+            "miou": 0.7493712013470479
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=69-step=245241.ckpt",
+            "miou": 0.7493045392960858
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=75-step=266337.ckpt",
+            "miou": 0.7491407237255685
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=69-step=246120.ckpt",
+            "miou": 0.749082334476473
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=76-step=270732.ckpt",
+            "miou": 0.7487735040858098
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=78-step=275127.ckpt",
+            "miou": 0.7487283742237516
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=66-step=233814.ckpt",
+            "miou": 0.7484841966173981
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=75-step=265458.ckpt",
+            "miou": 0.7484799961106054
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=68-step=240846.ckpt",
+            "miou": 0.7483874868209991
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=68-step=241725.ckpt",
+            "miou": 0.7482053267894769
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=77-step=273369.ckpt",
+            "miou": 0.7478701402052824
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=64-step=228540.ckpt",
+            "miou": 0.7473592809965343
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=65-step=232056.ckpt",
+            "miou": 0.7465568396240748
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=79-step=278643.ckpt",
+            "miou": 0.7460169589782797
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=67-step=236451.ckpt",
+            "miou": 0.7460024507896442
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=79-step=279522.ckpt",
+            "miou": 0.7454204822672292
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=70-step=246999.ckpt",
+            "miou": 0.7452304395817007
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=76-step=269853.ckpt",
+            "miou": 0.7451297059641628
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=67-step=239088.ckpt",
+            "miou": 0.7434427755550674
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=66-step=232935.ckpt",
+            "miou": 0.7421843508197365
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=65-step=231177.ckpt",
+            "miou": 0.7408203834952244
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=62-step=220629.ckpt",
+            "miou": 0.7398043705894666
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=67-step=238209.ckpt",
+            "miou": 0.7397715820638935
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=60-step=213597.ckpt",
+            "miou": 0.739350254890718
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=64-step=225903.ckpt",
+            "miou": 0.7382556139452318
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=65-step=229419.ckpt",
+            "miou": 0.7370342199679027
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=78-step=276006.ckpt",
+            "miou": 0.7368771493209422
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=63-step=224145-v1.ckpt",
+            "miou": 0.7348280827398008
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=63-step=224145.ckpt",
+            "miou": 0.7348253693641009
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=60-step=214476.ckpt",
+            "miou": 0.7347297932081591
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=64-step=227661.ckpt",
+            "miou": 0.7346886552677585
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=62-step=218871.ckpt",
+            "miou": 0.7346120572430594
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=61-step=216234.ckpt",
+            "miou": 0.7343987834935685
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=61-step=217992.ckpt",
+            "miou": 0.7330326628283733
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=63-step=225024.ckpt",
+            "miou": 0.7329536295375373
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=59-step=209202.ckpt",
+            "miou": 0.7327086978543458
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=63-step=222387.ckpt",
+            "miou": 0.7323195692389899
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=60-step=212718.ckpt",
+            "miou": 0.7320769233616158
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=61-step=217113.ckpt",
+            "miou": 0.7320240013677806
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=62-step=219750.ckpt",
+            "miou": 0.7301660964088607
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=61-step=215355.ckpt",
+            "miou": 0.7292866920285817
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=63-step=223266.ckpt",
+            "miou": 0.7283508869534703
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=62-step=221508.ckpt",
+            "miou": 0.7265120826178435
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=58-step=204807.ckpt",
+            "miou": 0.7261633053606902
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=64-step=226782.ckpt",
+            "miou": 0.7252627741860909
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=60-step=211839.ckpt",
+            "miou": 0.7250191605572378
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=58-step=206565.ckpt",
+            "miou": 0.7246995900975226
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=58-step=205686.ckpt",
+            "miou": 0.7208895750476669
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=54-step=193380.ckpt",
+            "miou": 0.7205569698798311
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=53-step=187227.ckpt",
+            "miou": 0.7176778227321567
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=55-step=195138.ckpt",
+            "miou": 0.7176455286415719
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=59-step=208323.ckpt",
+            "miou": 0.7156833104628637
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=59-step=210960.ckpt",
+            "miou": 0.7153292377630298
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=57-step=202170.ckpt",
+            "miou": 0.7148935938934813
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=59-step=210081.ckpt",
+            "miou": 0.714033350144431
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=58-step=207444.ckpt",
+            "miou": 0.7133049817252561
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=56-step=199533.ckpt",
+            "miou": 0.7122336229216817
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=57-step=203928.ckpt",
+            "miou": 0.7119411471213635
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=57-step=201291.ckpt",
+            "miou": 0.7111896878258201
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=56-step=200412.ckpt",
+            "miou": 0.7103581556676747
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=53-step=189864.ckpt",
+            "miou": 0.7056379406022537
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=54-step=190743.ckpt",
+            "miou": 0.7053955473325154
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=57-step=203049.ckpt",
+            "miou": 0.7046923845540218
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=54-step=192501.ckpt",
+            "miou": 0.7046548641814938
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=52-step=185469.ckpt",
+            "miou": 0.7030409715157738
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=55-step=196017.ckpt",
+            "miou": 0.702843753481281
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=53-step=188106.ckpt",
+            "miou": 0.7027157879585291
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=49-step=175800.ckpt",
+            "miou": 0.7025000715032574
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=51-step=180195.ckpt",
+            "miou": 0.7016008655029953
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=54-step=191622.ckpt",
+            "miou": 0.6999473465534551
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=55-step=196896.ckpt",
+            "miou": 0.6997974333090164
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=56-step=197775.ckpt",
+            "miou": 0.6993730835464173
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=55-step=194259.ckpt",
+            "miou": 0.6983896680370709
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=51-step=181953.ckpt",
+            "miou": 0.6979161661980563
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=52-step=186348.ckpt",
+            "miou": 0.6969954677394774
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=51-step=181074.ckpt",
+            "miou": 0.6964590950078775
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=50-step=176679.ckpt",
+            "miou": 0.6920562496012626
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=50-step=178437.ckpt",
+            "miou": 0.6911852653364902
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=51-step=182832.ckpt",
+            "miou": 0.6911123811094062
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=47-step=167889.ckpt",
+            "miou": 0.6906803721587607
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=46-step=162615.ckpt",
+            "miou": 0.6904603284654305
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=56-step=198654.ckpt",
+            "miou": 0.6894981641517796
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=48-step=169647.ckpt",
+            "miou": 0.689473463953843
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=52-step=184590.ckpt",
+            "miou": 0.6888011065206041
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=53-step=188985.ckpt",
+            "miou": 0.6872818047864981
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=46-step=165252.ckpt",
+            "miou": 0.6860551630079157
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=49-step=174042.ckpt",
+            "miou": 0.6858252922931025
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=34-step=120423.ckpt",
+            "miou": 0.6848018495796792
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=48-step=171405.ckpt",
+            "miou": 0.6832388895147861
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=47-step=167010.ckpt",
+            "miou": 0.6818820923517961
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=42-step=148551.ckpt",
+            "miou": 0.6811855722584292
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=46-step=163494.ckpt",
+            "miou": 0.6807908798453746
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=49-step=174921.ckpt",
+            "miou": 0.6801219849065732
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=48-step=172284.ckpt",
+            "miou": 0.6801163054542694
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=49-step=173163.ckpt",
+            "miou": 0.6801019953298777
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=45-step=160857.ckpt",
+            "miou": 0.679985782825987
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=45-step=160857-v1.ckpt",
+            "miou": 0.6799854835864262
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=45-step=161736.ckpt",
+            "miou": 0.6799671984530635
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=48-step=170526.ckpt",
+            "miou": 0.6783851874193052
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=44-step=156462.ckpt",
+            "miou": 0.6778565467153532
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=39-step=138003.ckpt",
+            "miou": 0.6772788635051011
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=45-step=159978.ckpt",
+            "miou": 0.6753369170946094
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=50-step=179316.ckpt",
+            "miou": 0.6751135483101767
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=43-step=152067.ckpt",
+            "miou": 0.6749198513292431
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=52-step=183711.ckpt",
+            "miou": 0.674044521672099
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=38-step=135366.ckpt",
+            "miou": 0.6739231407285227
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=47-step=166131.ckpt",
+            "miou": 0.6733040951143394
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=41-step=145914.ckpt",
+            "miou": 0.6719279917905195
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=40-step=144156.ckpt",
+            "miou": 0.671620799446976
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=50-step=177558.ckpt",
+            "miou": 0.6715479483654927
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=40-step=143277.ckpt",
+            "miou": 0.6703897909497023
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=37-step=131850.ckpt",
+            "miou": 0.6687066702186104
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=44-step=158220.ckpt",
+            "miou": 0.6681662192623576
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=42-step=149430.ckpt",
+            "miou": 0.667514579446097
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=35-step=125697.ckpt",
+            "miou": 0.6672869798206891
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=41-step=145035.ckpt",
+            "miou": 0.666643911111841
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=43-step=153825.ckpt",
+            "miou": 0.6665057832183713
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=45-step=159099.ckpt",
+            "miou": 0.6660494118371922
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=31-step=110754.ckpt",
+            "miou": 0.6652662652460057
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=38-step=137124.ckpt",
+            "miou": 0.6639488096642958
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=40-step=142398.ckpt",
+            "miou": 0.663727926657965
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=47-step=168768.ckpt",
+            "miou": 0.6634759336597058
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=39-step=138882.ckpt",
+            "miou": 0.6621416512013273
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=46-step=164373.ckpt",
+            "miou": 0.6621391261581178
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=41-step=146793.ckpt",
+            "miou": 0.6591360341338435
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=38-step=134487.ckpt",
+            "miou": 0.6579062047536093
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=37-step=130971.ckpt",
+            "miou": 0.6574806772941502
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=39-step=140640.ckpt",
+            "miou": 0.656828526044968
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=43-step=154704.ckpt",
+            "miou": 0.6553323482540391
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=26-step=92295.ckpt",
+            "miou": 0.6545011068641414
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=44-step=155583.ckpt",
+            "miou": 0.654271423689588
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=33-step=116907.ckpt",
+            "miou": 0.6541524447848304
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=42-step=150309.ckpt",
+            "miou": 0.6533557862579099
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=32-step=113391.ckpt",
+            "miou": 0.6532943890381184
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=37-step=133608.ckpt",
+            "miou": 0.653108225156947
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=41-step=147672.ckpt",
+            "miou": 0.6522923798998381
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=29-step=102843.ckpt",
+            "miou": 0.6510515747555372
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=37-step=132729.ckpt",
+            "miou": 0.6509428677269581
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=32-step=116028.ckpt",
+            "miou": 0.6501064966621539
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=34-step=121302.ckpt",
+            "miou": 0.6498525916502786
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=39-step=139761.ckpt",
+            "miou": 0.6492933521339933
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=32-step=114270.ckpt",
+            "miou": 0.6481533711139392
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=33-step=117786.ckpt",
+            "miou": 0.6473754001665181
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=29-step=105480.ckpt",
+            "miou": 0.6472426644893017
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=28-step=100206.ckpt",
+            "miou": 0.6459059128353446
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=44-step=157341.ckpt",
+            "miou": 0.6454303770704497
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=34-step=122181.ckpt",
+            "miou": 0.6451933549150051
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=40-step=141519.ckpt",
+            "miou": 0.6442262807824055
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=28-step=101085.ckpt",
+            "miou": 0.6431277106095653
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=30-step=108117.ckpt",
+            "miou": 0.6428012540509436
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=31-step=112512.ckpt",
+            "miou": 0.6417888794996109
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=36-step=127455.ckpt",
+            "miou": 0.6413071030736777
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=36-step=130092.ckpt",
+            "miou": 0.6407737384000587
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=30-step=106359.ckpt",
+            "miou": 0.6401417033290377
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=21-step=77352.ckpt",
+            "miou": 0.6399794172576221
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=27-step=98448.ckpt",
+            "miou": 0.6396888447089977
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=26-step=94932.ckpt",
+            "miou": 0.6382925974065206
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=38-step=136245.ckpt",
+            "miou": 0.6382358202862164
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=36-step=129213.ckpt",
+            "miou": 0.6355180774721458
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=33-step=118665.ckpt",
+            "miou": 0.6355098631611587
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=30-step=107238.ckpt",
+            "miou": 0.6354161444833487
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=19-step=67683.ckpt",
+            "miou": 0.6353104104660777
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=35-step=124818.ckpt",
+            "miou": 0.634896303645168
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=27-step=95811.ckpt",
+            "miou": 0.6335382028779004
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=36-step=128334.ckpt",
+            "miou": 0.6334887854284774
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=42-step=151188.ckpt",
+            "miou": 0.6332859231427248
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=24-step=85263.ckpt",
+            "miou": 0.6331902431177814
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=29-step=103722.ckpt",
+            "miou": 0.6318559514116373
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=35-step=123939.ckpt",
+            "miou": 0.6317489654126109
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=32-step=115149.ckpt",
+            "miou": 0.6317045782742929
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=25-step=91416.ckpt",
+            "miou": 0.6316673450829753
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=29-step=104601.ckpt",
+            "miou": 0.6313425641856588
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=31-step=109875.ckpt",
+            "miou": 0.6306514032991271
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=19-step=69441.ckpt",
+            "miou": 0.6294503835986354
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=14-step=52740.ckpt",
+            "miou": 0.6287669147948186
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=35-step=126576.ckpt",
+            "miou": 0.6281435649307154
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=24-step=87021.ckpt",
+            "miou": 0.6275050436557684
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=21-step=76473.ckpt",
+            "miou": 0.6273967794169163
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=13-step=48345.ckpt",
+            "miou": 0.6267201450876754
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=43-step=152946.ckpt",
+            "miou": 0.6262294745934119
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=21-step=74715.ckpt",
+            "miou": 0.6258693347235736
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=23-step=84384.ckpt",
+            "miou": 0.6255920217376258
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=28-step=101964.ckpt",
+            "miou": 0.6238931116252838
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=27-step=97569.ckpt",
+            "miou": 0.6235242325003039
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=22-step=79989.ckpt",
+            "miou": 0.6227709915622103
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=22-step=79989-v1.ckpt",
+            "miou": 0.6227703769045654
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=9-step=33402.ckpt",
+            "miou": 0.6210099800228073
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=25-step=89658.ckpt",
+            "miou": 0.6185651073023672
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=33-step=119544.ckpt",
+            "miou": 0.6182415346027503
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=25-step=90537.ckpt",
+            "miou": 0.6175631738980503
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=10-step=37797.ckpt",
+            "miou": 0.6174471486425219
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=12-step=45708.ckpt",
+            "miou": 0.6173551991473291
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=30-step=108996.ckpt",
+            "miou": 0.6172775767219991
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=20-step=71199.ckpt",
+            "miou": 0.6172483672711879
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=7-step=27249.ckpt",
+            "miou": 0.6169514193361301
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=23-step=81747.ckpt",
+            "miou": 0.6167318797385213
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=31-step=111633.ckpt",
+            "miou": 0.6163318416474868
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=13-step=46587.ckpt",
+            "miou": 0.6159200077740576
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=20-step=72957.ckpt",
+            "miou": 0.6155931291109566
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=15-step=55377.ckpt",
+            "miou": 0.6155301408417648
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=7-step=26370.ckpt",
+            "miou": 0.6151883107093667
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=28-step=99327.ckpt",
+            "miou": 0.6150037375305879
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=17-step=60651.ckpt",
+            "miou": 0.6134939213618507
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=9-step=34281.ckpt",
+            "miou": 0.613324337280226
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=34-step=123060.ckpt",
+            "miou": 0.6126715000132757
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=21-step=75594.ckpt",
+            "miou": 0.6122331156139291
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=24-step=86142.ckpt",
+            "miou": 0.6119443781354379
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=17-step=61530.ckpt",
+            "miou": 0.6118665918007933
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=11-step=41313.ckpt",
+            "miou": 0.6116479836461275
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=16-step=57135.ckpt",
+            "miou": 0.6116414067482245
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=20-step=73836.ckpt",
+            "miou": 0.6113409620483709
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=27-step=96690.ckpt",
+            "miou": 0.6110675150485401
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=25-step=88779.ckpt",
+            "miou": 0.6110559700543806
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=12-step=43950.ckpt",
+            "miou": 0.61040309903629
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=18-step=65925.ckpt",
+            "miou": 0.6103752226289367
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=18-step=66804.ckpt",
+            "miou": 0.6098558050157088
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=22-step=78231.ckpt",
+            "miou": 0.6086802262494719
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=12-step=43071.ckpt",
+            "miou": 0.6085358030872985
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=26-step=93174.ckpt",
+            "miou": 0.6079046336761165
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=23-step=83505.ckpt",
+            "miou": 0.6075946602753082
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=13-step=47466.ckpt",
+            "miou": 0.6075798669781354
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=10-step=36039.ckpt",
+            "miou": 0.6074393154183717
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=22-step=80868.ckpt",
+            "miou": 0.6070420377194645
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=12-step=44829.ckpt",
+            "miou": 0.606033536806855
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=6-step=24612.ckpt",
+            "miou": 0.6052993535279441
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=15-step=53619.ckpt",
+            "miou": 0.6052289572353817
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=17-step=63288.ckpt",
+            "miou": 0.604957856254796
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=3-step=13185.ckpt",
+            "miou": 0.6042204525816898
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=8-step=31644.ckpt",
+            "miou": 0.6041148485404579
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=14-step=51861.ckpt",
+            "miou": 0.6026506443722373
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=15-step=56256.ckpt",
+            "miou": 0.6023765681148787
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=16-step=58014.ckpt",
+            "miou": 0.6018668110802166
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=26-step=94053.ckpt",
+            "miou": 0.6018645782105819
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=15-step=54498.ckpt",
+            "miou": 0.6015981236243698
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=19-step=70320.ckpt",
+            "miou": 0.6012758258551246
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=14-step=50103.ckpt",
+            "miou": 0.6011074209015639
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=13-step=49224.ckpt",
+            "miou": 0.6009304660672852
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=10-step=36918.ckpt",
+            "miou": 0.6007866044124552
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=18-step=65046.ckpt",
+            "miou": 0.5995938477600751
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=9-step=32523.ckpt",
+            "miou": 0.5978268238906672
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=4-step=16701.ckpt",
+            "miou": 0.5970806353802729
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=6-step=21975.ckpt",
+            "miou": 0.5964707994410088
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=20-step=72078.ckpt",
+            "miou": 0.5955995991609742
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=5-step=18459.ckpt",
+            "miou": 0.5944818491081488
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=6-step=22854.ckpt",
+            "miou": 0.5934834065276701
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=7-step=25491.ckpt",
+            "miou": 0.5932792941451324
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=14-step=50982.ckpt",
+            "miou": 0.5924331509041938
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=22-step=79110.ckpt",
+            "miou": 0.5923520022630108
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=8-step=29886.ckpt",
+            "miou": 0.5917726666754248
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=18-step=64167.ckpt",
+            "miou": 0.5917599163872767
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=16-step=58893.ckpt",
+            "miou": 0.5914476718251007
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=11-step=42192.ckpt",
+            "miou": 0.5911280651017523
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=10-step=38676.ckpt",
+            "miou": 0.589520044194636
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=24-step=87900.ckpt",
+            "miou": 0.5889983652350057
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=16-step=59772.ckpt",
+            "miou": 0.5882729771868883
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=23-step=82626.ckpt",
+            "miou": 0.5882128576205202
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=9-step=35160.ckpt",
+            "miou": 0.5863511819319882
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=5-step=19338.ckpt",
+            "miou": 0.5855705752271191
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=3-step=11427.ckpt",
+            "miou": 0.5853594315034842
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=5-step=20217.ckpt",
+            "miou": 0.5837444156144287
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=2-step=10548.ckpt",
+            "miou": 0.5831756568841379
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=17-step=62409.ckpt",
+            "miou": 0.5816789917254686
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=19-step=68562.ckpt",
+            "miou": 0.5803162730062287
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=6-step=23733.ckpt",
+            "miou": 0.5797268031137913
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=4-step=17580.ckpt",
+            "miou": 0.5769723271574976
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=4-step=15822.ckpt",
+            "miou": 0.5733775999068342
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=8-step=30765.ckpt",
+            "miou": 0.5720710542313231
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=5-step=21096.ckpt",
+            "miou": 0.5717659739248793
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=3-step=14064.ckpt",
+            "miou": 0.5716261592697691
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=4-step=14943.ckpt",
+            "miou": 0.5677049001997513
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=11-step=39555.ckpt",
+            "miou": 0.5659976013820793
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=8-step=29007.ckpt",
+            "miou": 0.5624426722833693
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=3-step=12306.ckpt",
+            "miou": 0.5613710913136241
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=1-step=5274.ckpt",
+            "miou": 0.5600053368408513
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=1-step=4395.ckpt",
+            "miou": 0.5559804871218266
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=2-step=9669.ckpt",
+            "miou": 0.549712731651901
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=1-step=7032.ckpt",
+            "miou": 0.5441791608684765
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=2-step=7911.ckpt",
+            "miou": 0.5437707101547934
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=7-step=28128.ckpt",
+            "miou": 0.5436459377993346
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=1-step=6153.ckpt",
+            "miou": 0.5427151616003622
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=11-step=40434.ckpt",
+            "miou": 0.5413946487355785
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=2-step=8790.ckpt",
+            "miou": 0.524406043298169
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=0-step=3516.ckpt",
+            "miou": 0.5212411078797158
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=0-step=1758.ckpt",
+            "miou": 0.4796248420091893
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=0-step=2637.ckpt",
+            "miou": 0.4603894637443358
+        },
+        {
+            "path": "nuscenesCheckpoints/epoch=0-step=879.ckpt",
+            "miou": 0.37472430969364223
+        }
+    ]
+}
